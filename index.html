@@ -330,10 +330,10 @@ var mesSelecionado = new Date().getMonth(); // 0=Jan
 var MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
 // ▼▼▼ COLE SUA URL DO APPS SCRIPT AQUI ▼▼▼
-var API_URL = 'https://script.google.com/macros/s/AKfycbzTR-HsiEzcvSP1v-WW2A9IauDXclAsi-yuNGnxOPKrAP7rduhhkJSnKwPZcMCsMT4qYQ/exec';
+var API_URL = 'https://script.google.com/macros/s/AKfycbzTR-HsiEzcvSP1v-WW2A9IauDXc1Asi-yuNGnxOPKrAP7rduhhkJSnKwPZcMCsMT4qYQ/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
-var usandoAPI = true;
+var usandoAPI = API_URL !== 'COLE_SUA_URL_AQUI';
 
 function fmt(x){ return 'R$ '+parseFloat(x||0).toFixed(2).replace('.',','); }
 function n(id){ return parseFloat(document.getElementById(id).value)||0; }
