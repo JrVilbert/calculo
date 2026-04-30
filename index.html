@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopee Manager</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#fff;--bg2:#f5f5f5;--bg3:#ebebeb;--text:#111;--text2:#666;--text3:#999;--border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.22);--green:#1a7a4a;--green-bg:#eaf4ee;--red:#b91c1c;--red-bg:#fef2f2;--amber:#92400e;--amber-bg:#fffbeb;--blue:#1d4ed8;--blue-bg:#eff6ff;--radius:8px;--radius-lg:12px}
+@media(prefers-color-scheme:dark){:root{--bg:#1a1a1a;--bg2:#242424;--bg3:#2e2e2e;--text:#f0f0f0;--text2:#aaa;--text3:#777;--border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2);--green:#34d399;--green-bg:#064e3b;--red:#f87171;--red-bg:#450a0a;--amber:#fcd34d;--amber-bg:#451a03;--blue:#60a5fa;--blue-bg:#1e3a5f}}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.container{max-width:900px;margin:0 auto;padding:16px}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:0.5px solid var(--border)}
+.header h1{font-size:20px;font-weight:600}
+.header p{font-size:12px;color:var(--text2);margin-top:2px}
+.tabs{display:flex;border-bottom:0.5px solid var(--border);margin-bottom:20px}
+.tab{padding:10px 18px;font-size:14px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--text2);border-bottom:2px solid transparent;transition:all .15s}
+.tab.active{color:var(--text);border-bottom-color:var(--text)}
+.section{display:none}.section.active{display:block}
+.btn{padding:8px 16px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);color:var(--text);transition:all .1s}
+.btn:hover{background:var(--bg2)}.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--text);color:var(--bg);border-color:var(--text)}.btn-primary:hover{opacity:.85}
+.btn-danger{border-color:var(--red);color:var(--red)}.btn-success{border-color:var(--green);color:var(--green)}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:12px;color:var(--text2);margin-bottom:4px;font-weight:500}
+.form-group input,.form-group textarea{width:100%;padding:9px 11px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);outline:none}
+.form-group input:focus,.form-group textarea:focus{border-color:var(--text)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.img-upload{border:1.5px dashed var(--border2);border-radius:var(--radius-lg);padding:16px;text-align:center;cursor:pointer;transition:all .15s}
+.img-upload:hover{background:var(--bg2)}.img-upload input{display:none}
+.img-preview{width:100%;height:150px;object-fit:cover;border-radius:var(--radius);margin-top:10px}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:10px;margin-bottom:14px}
+.pcard{border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:10px;background:var(--bg);transition:border-color .15s}
+.pcard.selected{border:2px solid var(--text);background:var(--bg2)}
+.pcard-img{width:100%;height:110px;border-radius:var(--radius);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:8px;overflow:hidden}
+.pcard-img img{width:100%;height:100%;object-fit:cover}
+.pcard-sku{font-size:11px;color:var(--text2);margin-bottom:2px}
+.pcard-name{font-size:13px;font-weight:500;margin-bottom:3px}
+.pcard-price{font-size:14px;font-weight:600;margin-bottom:8px}
+.qty-ctrl{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.qty-ctrl button{width:28px;height:28px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:16px;cursor:pointer;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center}
+.qty-ctrl span{min-width:28px;text-align:center;font-size:14px;font-weight:500}
+.pcard-actions{display:flex;gap:4px}
+.margem-tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:20px;font-weight:500;margin-left:4px}
+.m-low{background:var(--red-bg);color:var(--red)}.m-mid{background:var(--amber-bg);color:var(--amber)}.m-ok{background:var(--green-bg);color:var(--green)}
+.sel-bar{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.orc-item{border:0.5px solid var(--border);border-radius:var(--radius);padding:10px 12px;display:flex;gap:10px;align-items:center;background:var(--bg);margin-bottom:8px}
+.orc-thumb{width:46px;height:46px;border-radius:var(--radius);flex-shrink:0;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden}
+.orc-thumb img{width:100%;height:100%;object-fit:cover}
+.orc-info{flex:1;min-width:0}
+.orc-info .n{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.orc-info .p{font-size:12px;color:var(--text2)}
+.orc-qty{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.orc-qty button{width:26px;height:26px;border:0.5px solid var(--border2);border-radius:4px;font-size:14px;cursor:pointer;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center}
+.orc-qty span{min-width:24px;text-align:center;font-size:13px;font-weight:500}
+.orc-sub{font-size:13px;font-weight:500;min-width:76px;text-align:right;flex-shrink:0}
+.total-card{background:var(--bg2);border-radius:var(--radius);padding:14px;margin-bottom:14px}
+.total-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:4px 0;color:var(--text2)}
+.total-row input{width:56px;padding:3px 7px;font-size:13px;border:0.5px solid var(--border2);border-radius:4px;background:var(--bg);color:var(--text);outline:none}
+.total-row.final{font-size:16px;font-weight:600;color:var(--text);border-top:0.5px solid var(--border);margin-top:8px;padding-top:10px}
+.cli-block{border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:12px;margin-bottom:14px;background:var(--bg)}
+.sect-label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:10px;padding-bottom:8px;border-bottom:0.5px solid var(--border)}
+.preco-calc{background:var(--blue-bg);border-radius:var(--radius);padding:12px;margin-top:10px}
+.preco-calc p{font-size:12px;color:var(--blue);margin-bottom:6px;font-weight:500}
+.preco-calc .resultado{font-size:16px;font-weight:600;color:var(--blue)}
+.empty{text-align:center;padding:40px 20px;color:var(--text2);font-size:14px}
+.empty span{display:block;font-size:36px;margin-bottom:10px}
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:var(--text);color:var(--bg);border-radius:20px;font-size:11px;font-weight:600;margin-left:4px}
+.search-row{display:flex;gap:8px;margin-bottom:12px}
+.search-row input{flex:1;padding:9px 12px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);outline:none}
+.margem-btns{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+.orc-actions{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:500px){.form-row{grid-template-columns:1fr}.product-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr))}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div><h1>Shopee Manager</h1><p id="lbl-count">Carregando...</p></div>
+    <span style="font-size:11px;background:var(--blue-bg);color:var(--blue);padding:3px 10px;border-radius:20px;font-weight:500">Pro</span>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="go('catalogo')">Catálogo</button>
+    <button class="tab" onclick="go('orcamento')">Orçamento<span class="badge" id="orc-badge" style="display:none"></span></button>
+    <button class="tab" onclick="go('cadastro')">+ Produto</button>
+  </div>
+  <div class="section active" id="tab-catalogo">
+    <div class="search-row">
+      <input type="text" id="search" placeholder="Buscar por nome, SKU ou categoria..." oninput="renderCatalogo()">
+      <button class="btn" onclick="clearSel()">Limpar</button>
+    </div>
+    <div id="sel-bar" class="sel-bar" style="display:none">
+      <span id="sel-txt" style="font-size:13px;font-weight:500"></span>
+      <button class="btn btn-primary" onclick="addSelToOrc()">Adicionar ao orçamento ↗</button>
+    </div>
+    <div class="product-grid" id="pgrid"></div>
+    <div class="empty" id="cat-empty" style="display:none"><span>📦</span>Nenhum produto cadastrado.<br><button class="btn btn-primary" style="margin-top:12px" onclick="go('cadastro')">Cadastrar primeiro produto</button></div>
+  </div>
+  <div class="section" id="tab-orcamento">
+    <div class="cli-block">
+      <p class="sect-label">Dados do cliente</p>
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0"><label>Nome</label><input type="text" id="cli-nome" placeholder="Nome do cliente"></div>
+        <div class="form-group" style="margin-bottom:0"><label>WhatsApp</label><input type="text" id="cli-tel" placeholder="(51) 99999-9999"></div>
+      </div>
+    </div>
+    <div id="orc-list"></div>
+    <div class="empty" id="orc-empty" style="display:none"><span>🧾</span>Nenhum item. Selecione produtos no catálogo.</div>
+    <div id="total-area" style="display:none">
+      <div class="total-card">
+        <div class="total-row"><span>Subtotal</span><span id="t-sub">R$ 0,00</span></div>
+        <div class="total-row"><span>Desconto (%)</span><span style="display:flex;align-items:center;gap:6px"><input type="number" id="desconto" min="0" max="100" value="0" step="0.5" oninput="calcTotal()"> %</span></div>
+        <div class="total-row"><span>Acréscimo (%)</span><span style="display:flex;align-items:center;gap:6px"><input type="number" id="acrescimo" min="0" max="100" value="0" step="0.5" oninput="calcTotal()"> %</span></div>
+        <div class="total-row final"><span>Total</span><span id="t-total">R$ 0,00</span></div>
+      </div>
+      <div class="orc-actions">
+        <button class="btn btn-primary" onclick="printOrc()">🖨 Imprimir / PDF</button>
+        <button class="btn btn-success" onclick="sendWA()">WhatsApp ↗</button>
+        <button class="btn btn-danger" onclick="clearOrc()">Limpar orçamento</button>
+      </div>
+    </div>
+  </div>
+  <div class="section" id="tab-cadastro">
+    <div style="max-width:520px">
+      <div class="form-group">
+        <label>Foto do produto</label>
+        <div class="img-upload" onclick="document.getElementById('foto-inp').click()" id="foto-area">
+          <input type="file" id="foto-inp" accept="image/*" onchange="handleFoto(this)">
+          <p style="font-size:13px;color:var(--text2)" id="foto-label">Clique para adicionar foto</p>
+          <p style="font-size:11px;color:var(--text3);margin-top:3px">JPG, PNG ou WEBP</p>
+          <img id="foto-prev" class="img-preview" style="display:none">
+        </div>
+      </div>
+      <div class="form-group"><label>Nome do produto *</label><input type="text" id="p-nome" placeholder="Ex: Camiseta Preta Tamanho M"></div>
+      <div class="form-row">
+        <div class="form-group"><label>SKU / Código</label><input type="text" id="p-sku" placeholder="CAM-001"></div>
+        <div class="form-group"><label>Categoria</label><input type="text" id="p-cat" placeholder="Roupas, Acessórios..."></div>
+      </div>
+      <div style="border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:12px">
+        <p class="sect-label">Precificação com margem de lucro</p>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0"><label>Preço de custo (R$)</label><input type="number" id="p-custo" placeholder="0,00" step="0.01" oninput="calcMargem()"></div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>Multiplicador de margem</label>
+            <div class="margem-btns">
+              <button class="btn" style="padding:3px 10px;font-size:12px" onclick="setMargem(2)">×2</button>
+              <button class="btn" style="padding:3px 10px;font-size:12px" onclick="setMargem(2.5)">×2,5</button>
+              <button class="btn" style="padding:3px 10px;font-size:12px" onclick="setMargem(3)">×3</button>
+              <button class="btn" style="padding:3px 10px;font-size:12px" onclick="setMargem(4)">×4</button>
+            </div>
+            <input type="number" id="p-margem" placeholder="Ex: 2.5" step="0.1" min="1" oninput="calcMargem()">
+          </div>
+        </div>
+        <div class="preco-calc" id="preco-calc" style="display:none">
+          <p>Preço sugerido de venda</p>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+            <span class="resultado" id="preco-sugerido">R$ 0,00</span>
+            <button class="btn" style="font-size:12px;padding:4px 12px" onclick="usarSugerido()">Usar este valor</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-group"><label>Preço de venda (R$) *</label><input type="number" id="p-venda" placeholder="0,00" step="0.01"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Estoque (unidades)</label><input type="number" id="p-estoque" placeholder="0" min="0"></div>
+        <div class="form-group"><label>Peso (kg) — opcional</label><input type="number" id="p-peso" placeholder="0.5" step="0.1"></div>
+      </div>
+      <div class="form-group"><label>Descrição / Observações</label><textarea id="p-desc" rows="2" placeholder="Cor, tamanho, material..." style="resize:vertical"></textarea></div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button class="btn btn-primary" onclick="salvar()">Salvar produto</button>
+        <button class="btn" onclick="limparForm()">Limpar</button>
+      </div>
+      <p id="cad-msg" style="font-size:13px;display:none"></p>
+    </div>
+  </div>
+</div>
+<script>
+let products=[],orcamento=[],selected={},editId=null,fotoB64=null;
+const DB='shopee_v3',ORC='shopee_orc_v3';
+function saveAll(){try{localStorage.setItem(DB,JSON.stringify(products));}catch(e){}try{localStorage.setItem(ORC,JSON.stringify(orcamento));}catch(e){}}
+function loadAll(){try{const d=localStorage.getItem(DB);if(d)products=JSON.parse(d);}catch(e){products=[];}try{const d=localStorage.getItem(ORC);if(d)orcamento=JSON.parse(d);}catch(e){orcamento=[];}updateCount();renderCatalogo();updateBadge();}
+function updateCount(){document.getElementById('lbl-count').textContent=products.length+' produto(s) cadastrado(s)';}
+function go(tab){['catalogo','orcamento','cadastro'].forEach((t,i)=>{document.querySelectorAll('.tab')[i].classList.toggle('active',t===tab);document.getElementById('tab-'+t).classList.toggle('active',t===tab);});if(tab==='orcamento')renderOrc();if(tab==='catalogo')renderCatalogo();}
+function renderCatalogo(){const q=(document.getElementById('search').value||'').toLowerCase();const f=products.filter(p=>p.nome.toLowerCase().includes(q)||(p.sku||'').toLowerCase().includes(q)||(p.cat||'').toLowerCase().includes(q));const grid=document.getElementById('pgrid'),empty=document.getElementById('cat-empty');if(!f.length){grid.innerHTML='';empty.style.display='block';return;}empty.style.display='none';grid.innerHTML=f.map(p=>{const qty=selected[p.id]||0,sel=qty>0;const img=p.foto?'<img src="'+p.foto+'" alt="'+p.nome+'">'+'':'<span>📦</span>';const m=p.custo&&p.venda?(parseFloat(p.venda)/parseFloat(p.custo)).toFixed(2):null;const mTag=m?'<span class="margem-tag '+(m<2?'m-low':m<3?'m-mid':'m-ok')+'">×'+m+'</span>':'';return '<div class="pcard'+(sel?' selected':'')+'"><div class="pcard-img">'+img+'</div><div class="pcard-sku">'+(p.sku||'')+mTag+'</div><div class="pcard-name">'+p.nome+'</div><div class="pcard-price">R$ '+parseFloat(p.venda).toFixed(2).replace('.',',')+'</div><div class="qty-ctrl"><button onclick="chgSel(''+p.id+'',-1)">−</button><span>'+qty+'</span><button onclick="chgSel(''+p.id+'',1)">+</button></div><div class="pcard-actions"><button class="btn" style="flex:1;padding:4px 6px;font-size:11px" onclick="editProd(''+p.id+'')">Editar</button><button class="btn btn-danger" style="padding:4px 8px;font-size:11px" onclick="delProd(''+p.id+'')">✕</button></div></div>';}).join('');updateSelBar();}
+function chgSel(id,d){selected[id]=(selected[id]||0)+d;if(selected[id]<0)selected[id]=0;renderCatalogo();}
+function updateSelBar(){const total=Object.values(selected).reduce((a,b)=>a+b,0),bar=document.getElementById('sel-bar');if(total>0){bar.style.display='flex';const items=Object.values(selected).filter(v=>v>0).length;document.getElementById('sel-txt').textContent=items+' produto(s) — '+total+' un. selecionada(s)';}else bar.style.display='none';}
+function clearSel(){selected={};document.getElementById('search').value='';renderCatalogo();}
+function addSelToOrc(){Object.entries(selected).forEach(([id,qty])=>{if(!qty)return;const p=products.find(x=>x.id===id);if(!p)return;const ex=orcamento.find(o=>o.id===id);if(ex)ex.qty+=qty;else orcamento.push({...p,qty});});selected={};saveAll();updateBadge();go('orcamento');}
+function updateBadge(){const b=document.getElementById('orc-badge'),t=orcamento.reduce((s,o)=>s+o.qty,0);if(t>0){b.style.display='inline-flex';b.textContent=t;}else b.style.display='none';}
+function renderOrc(){const list=document.getElementById('orc-list'),empty=document.getElementById('orc-empty'),ta=document.getElementById('total-area');if(!orcamento.length){list.innerHTML='';empty.style.display='block';ta.style.display='none';return;}empty.style.display='none';ta.style.display='block';list.innerHTML=orcamento.map((o,i)=>{const sub=(parseFloat(o.venda)*o.qty).toFixed(2).replace('.',',');const thumb=o.foto?'<div class="orc-thumb"><img src="'+o.foto+'"></div>':'<div class="orc-thumb">📦</div>';return '<div class="orc-item">'+thumb+'<div class="orc-info"><div class="n">'+o.nome+'</div><div class="p">R$ '+parseFloat(o.venda).toFixed(2).replace('.',',')+' / un</div></div><div class="orc-qty"><button onclick="chgOrc('+i+',-1)">−</button><span>'+o.qty+'</span><button onclick="chgOrc('+i+',1)">+</button></div><div class="orc-sub">R$ '+sub+'</div><button class="btn btn-danger" style="padding:3px 8px;font-size:11px;flex-shrink:0" onclick="rmOrc('+i+')">✕</button></div>';}).join('');calcTotal();}
+function chgOrc(i,d){orcamento[i].qty+=d;if(orcamento[i].qty<=0)orcamento.splice(i,1);saveAll();updateBadge();renderOrc();}
+function rmOrc(i){orcamento.splice(i,1);saveAll();updateBadge();renderOrc();}
+function calcTotal(){const sub=orcamento.reduce((s,o)=>s+parseFloat(o.venda)*o.qty,0);const desc=parseFloat(document.getElementById('desconto').value)||0;const acr=parseFloat(document.getElementById('acrescimo').value)||0;const total=sub*(1-desc/100)*(1+acr/100);document.getElementById('t-sub').textContent='R$ '+sub.toFixed(2).replace('.',',');document.getElementById('t-total').textContent='R$ '+total.toFixed(2).replace('.',',');}
+function clearOrc(){if(!confirm('Limpar todo o orçamento?'))return;orcamento=[];saveAll();updateBadge();renderOrc();}
+function sendWA(){const nome=document.getElementById('cli-nome').value||'Cliente';const desc=parseFloat(document.getElementById('desconto').value)||0;const acr=parseFloat(document.getElementById('acrescimo').value)||0;const sub=orcamento.reduce((s,o)=>s+parseFloat(o.venda)*o.qty,0);const total=sub*(1-desc/100)*(1+acr/100);let msg='*Orçamento — '+nome+'*
+📅 '+new Date().toLocaleDateString('pt-BR')+'
+
+';orcamento.forEach(o=>{msg+='• '+o.nome+' x'+o.qty+' = R$ '+(parseFloat(o.venda)*o.qty).toFixed(2).replace('.',',')+'
+';});msg+='
+Subtotal: R$ '+sub.toFixed(2).replace('.',',');if(desc>0)msg+='
+Desconto: '+desc+'%';if(acr>0)msg+='
+Acréscimo: '+acr+'%';msg+='
+*💰 Total: R$ '+total.toFixed(2).replace('.',',')+'*';const tel=(document.getElementById('cli-tel').value||'').replace(/\D/g,'');window.open((tel?'https://wa.me/55'+tel:'https://wa.me/')+'?text='+encodeURIComponent(msg));}
+function printOrc(){const nome=document.getElementById('cli-nome').value||'—',tel=document.getElementById('cli-tel').value||'—';const desc=parseFloat(document.getElementById('desconto').value)||0,acr=parseFloat(document.getElementById('acrescimo').value)||0;const sub=orcamento.reduce((s,o)=>s+parseFloat(o.venda)*o.qty,0),total=sub*(1-desc/100)*(1+acr/100);const rows=orcamento.map(o=>'<tr><td>'+o.nome+'</td><td style="text-align:center">'+o.qty+'</td><td style="text-align:right">R$ '+parseFloat(o.venda).toFixed(2).replace('.',',')+'</td><td style="text-align:right">R$ '+(parseFloat(o.venda)*o.qty).toFixed(2).replace('.',',')+'</td></tr>').join('');const w=window.open('','_blank');w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Orçamento</title><style>body{font-family:sans-serif;padding:40px;font-size:14px;color:#111}h2{font-size:22px;margin-bottom:4px}.info{color:#666;font-size:12px;margin-bottom:20px}table{width:100%;border-collapse:collapse;margin:16px 0}th{background:#f5f5f5;padding:8px;text-align:left;font-weight:600;border-bottom:2px solid #eee}td{padding:8px;border-bottom:1px solid #eee}.total{font-size:17px;font-weight:bold;text-align:right;margin-top:10px}.si{text-align:right;color:#666;font-size:13px;margin-top:4px}</style></head><body><h2>Orçamento</h2><p class="info">Cliente: <strong>'+nome+'</strong> | Tel: '+tel+' | Data: '+new Date().toLocaleDateString('pt-BR')+'</p><table><thead><tr><th>Produto</th><th style="text-align:center">Qtd</th><th style="text-align:right">Unit.</th><th style="text-align:right">Subtotal</th></tr></thead><tbody>'+rows+'</tbody></table><p class="si">Subtotal: R$ '+sub.toFixed(2).replace('.',',')+'</p>'+(desc>0?'<p class="si">Desconto: '+desc+'%</p>':'')+(acr>0?'<p class="si">Acréscimo: '+acr+'%</p>':'')+'<p class="total">Total: R$ '+total.toFixed(2).replace('.',',')+'</p><scr'+'ipt>window.onload=()=>window.print()<'+'/sc'+'ript></body></html>');w.document.close();}
+function setMargem(m){document.getElementById('p-margem').value=m;calcMargem();}
+function calcMargem(){const c=parseFloat(document.getElementById('p-custo').value),m=parseFloat(document.getElementById('p-margem').value),calc=document.getElementById('preco-calc');if(c>0&&m>=1){document.getElementById('preco-sugerido').textContent='R$ '+(c*m).toFixed(2).replace('.',',');calc.style.display='block';}else calc.style.display='none';}
+function usarSugerido(){const c=parseFloat(document.getElementById('p-custo').value),m=parseFloat(document.getElementById('p-margem').value);if(c>0&&m>=1)document.getElementById('p-venda').value=(c*m).toFixed(2);}
+function handleFoto(inp){const f=inp.files[0];if(!f)return;const img=new Image(),reader=new FileReader();reader.onload=e=>{img.onload=()=>{const max=600;let w=img.width,h=img.height;if(w>max||h>max){if(w>h){h=Math.round(h*max/w);w=max;}else{w=Math.round(w*max/h);h=max;}}const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);fotoB64=canvas.toDataURL('image/jpeg',.82);const prev=document.getElementById('foto-prev');prev.src=fotoB64;prev.style.display='block';document.getElementById('foto-label').textContent='Foto selecionada ✓';};img.src=e.target.result;};reader.readAsDataURL(f);}
+function salvar(){const nome=document.getElementById('p-nome').value.trim(),venda=document.getElementById('p-venda').value,msg=document.getElementById('cad-msg');if(!nome||!venda){msg.textContent='⚠ Nome e preço de venda são obrigatórios.';msg.style.color='var(--red)';msg.style.display='block';return;}const prod={id:editId||Date.now().toString(),nome,sku:document.getElementById('p-sku').value.trim(),cat:document.getElementById('p-cat').value.trim(),custo:document.getElementById('p-custo').value,margem:document.getElementById('p-margem').value,venda,estoque:document.getElementById('p-estoque').value,peso:document.getElementById('p-peso').value,desc:document.getElementById('p-desc').value.trim(),foto:fotoB64||(editId?(products.find(p=>p.id===editId)||{}).foto:null)};if(editId){const i=products.findIndex(p=>p.id===editId);products[i]=prod;editId=null;}else products.push(prod);saveAll();updateCount();limparForm();msg.textContent='✓ Produto salvo!';msg.style.color='var(--green)';msg.style.display='block';setTimeout(()=>msg.style.display='none',2500);}
+function limparForm(){['p-nome','p-sku','p-cat','p-custo','p-margem','p-venda','p-estoque','p-peso','p-desc'].forEach(id=>document.getElementById(id).value='');document.getElementById('foto-prev').style.display='none';document.getElementById('foto-label').textContent='Clique para adicionar foto';document.getElementById('preco-calc').style.display='none';document.getElementById('foto-inp').value='';fotoB64=null;editId=null;}
+function editProd(id){const p=products.find(x=>x.id===id);if(!p)return;editId=id;go('cadastro');document.getElementById('p-nome').value=p.nome||'';document.getElementById('p-sku').value=p.sku||'';document.getElementById('p-cat').value=p.cat||'';document.getElementById('p-custo').value=p.custo||'';document.getElementById('p-margem').value=p.margem||'';document.getElementById('p-venda').value=p.venda||'';document.getElementById('p-estoque').value=p.estoque||'';document.getElementById('p-peso').value=p.peso||'';document.getElementById('p-desc').value=p.desc||'';if(p.foto){fotoB64=p.foto;const prev=document.getElementById('foto-prev');prev.src=p.foto;prev.style.display='block';document.getElementById('foto-label').textContent='Foto atual (clique para trocar)';}calcMargem();window.scrollTo(0,0);}
+function delProd(id){if(!confirm('Excluir este produto?'))return;products=products.filter(p=>p.id!==id);orcamento=orcamento.filter(o=>o.id!==id);saveAll();updateCount();delete selected[id];renderCatalogo();}
+loadAll();
+</script>
+</body>
+</html>
