@@ -93,6 +93,8 @@ nav button.on{color:var(--orange);border-bottom-color:var(--orange)}
   <button onclick="go('cat',this)">Catálogo</button>
   <button onclick="go('orc',this)">Orçamento<span class="badge" id="obadge" style="display:none">0</span></button>
   <button onclick="go('add',this)">+ Produto</button>
+  <button onclick="go('vendas',this)">Vendas</button>
+  <button onclick="go('cfg',this)">⚙ Config</button>
 </nav>
 
 <!-- CALCULADORA -->
@@ -222,10 +224,110 @@ nav button.on{color:var(--orange);border-bottom-color:var(--orange)}
     <div class="msg" id="pmsg"></div>
   </div>
 </div>
+
+<!-- VENDAS -->
+<div class="sec" id="vendas">
+  <div class="card" style="padding:12px;margin-bottom:12px">
+    <div class="ctitle" style="margin-bottom:10px">Filtrar por mês</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px" id="mes-btns"></div>
+  </div>
+
+  <div class="card" style="padding:12px;margin-bottom:12px">
+    <div class="ctitle" style="margin-bottom:10px">Registrar venda</div>
+    <div class="row2">
+      <div class="fg"><label>Data</label><input type="date" id="v-data"></div>
+      <div class="fg">
+        <label>Produto</label>
+        <select id="v-prod" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--card);color:var(--text)">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="fg"><label>Quantidade</label><input type="number" id="v-qty" placeholder="1" min="1" value="1"></div>
+      <div class="fg"><label>Valor bruto (R$)</label><input type="number" id="v-bruto" placeholder="0,00" step="0.01" oninput="calcVenda()"></div>
+    </div>
+    <div class="row2">
+      <div class="fg"><label>Valor produção (R$)</label><input type="number" id="v-prod-val" placeholder="0,00" step="0.01" oninput="calcVenda()"></div>
+      <div class="fg"><label>Valor líquido (calculado)</label><input id="v-liq" readonly style="background:var(--orange-light);color:var(--orange);font-weight:600;width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px"></div>
+    </div>
+    <div class="row2">
+      <div class="fg">
+        <label>Pagamento</label>
+        <input type="text" id="v-pag" placeholder="Ex: Pix, Cartão, Dinheiro...">
+      </div>
+      <div class="fg">
+        <label>Entrega</label>
+        <select id="v-entrega" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--card);color:var(--text)">
+          <option>Shopee</option>
+          <option>Correios</option>
+          <option>Retirada</option>
+          <option>Motoboy</option>
+          <option>Outro</option>
+        </select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="fg">
+        <label>Canal de venda</label>
+        <select id="v-canal" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--card);color:var(--text)">
+          <option>Shopee</option>
+          <option>Venda direta</option>
+          <option>Instagram</option>
+          <option>WhatsApp</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div class="fg"><label>Observação</label><input type="text" id="v-obs" placeholder="Opcional"></div>
+    </div>
+    <button class="btn btn-pri" onclick="salvarVenda()">Registrar venda</button>
+    <div class="msg" id="v-msg"></div>
+  </div>
+
+  <!-- Resumo do mês -->
+  <div class="card" style="padding:12px;margin-bottom:12px" id="v-resumo" style="display:none">
+    <div class="ctitle" style="margin-bottom:10px">Resumo do mês</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px" id="v-stats"></div>
+  </div>
+
+  <!-- Tabela de vendas -->
+  <div id="v-tabela"></div>
+</div>
+
+<!-- CONFIGURAÇÕES -->
+<div class="sec" id="cfg">
+  <div class="card">
+    <div class="ctitle">Logo da empresa (aparece no PDF)</div>
+    <div class="uparea" id="logo-area" onclick="document.getElementById('logo-inp').click()">
+      <input type="file" id="logo-inp" accept="image/*" onchange="handleLogo(this)">
+      <p id="logo-lbl" style="font-size:13px;color:var(--muted)">Clique para adicionar logo</p>
+      <img id="logo-prev" style="max-height:80px;max-width:200px;margin-top:8px;display:none;border-radius:4px">
+    </div>
+  </div>
+  <div class="card">
+    <div class="ctitle">Dados da empresa</div>
+    <div class="fg"><label>Nome da empresa</label><input id="cfg-nome" placeholder="Ex: Jutah Impressões 3D" oninput="saveCfg()"></div>
+    <div class="fg"><label>CNPJ / CPF</label><input id="cfg-cnpj" placeholder="00.000.000/0001-00" oninput="saveCfg()"></div>
+    <div class="fg"><label>Endereço</label><input id="cfg-end" placeholder="Rua, Número — Cidade, Estado" oninput="saveCfg()"></div>
+    <div class="fg"><label>Telefone / WhatsApp</label><input id="cfg-tel" placeholder="(51) 99999-9999" oninput="saveCfg()"></div>
+    <div class="fg"><label>E-mail</label><input id="cfg-email" placeholder="contato@empresa.com" oninput="saveCfg()"></div>
+    <div class="fg"><label>Instagram / Site</label><input id="cfg-insta" placeholder="@sualoja" oninput="saveCfg()"></div>
+  </div>
+  <div class="card">
+    <div class="ctitle">PDF — rodapé personalizado</div>
+    <div class="fg"><label>Observações do orçamento</label><textarea id="cfg-obs" rows="3" placeholder="Ex: Prazo de entrega: 5 dias úteis. Aceitamos Pix e cartão." oninput="saveCfg()" style="resize:vertical"></textarea></div>
+    <div class="fg"><label>Validade do orçamento (dias)</label><input type="number" id="cfg-validade" value="5" min="1" oninput="saveCfg()"></div>
+  </div>
+  <button class="btn btn-pri" onclick="showMsg('cfg-msg','✓ Configurações salvas!',2000)">Salvar configurações</button>
+  <div class="msg" id="cfg-msg"></div>
+</div>
 </div>
 
 <script>
 var prods=[], orc=[], selqty={}, editing=null, imgb64=null, calcData={};
+var vendas=[], cfg={}, logoB64='';
+var mesSelecionado = new Date().getMonth(); // 0=Jan
+var MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
 // ▼▼▼ COLE SUA URL DO APPS SCRIPT AQUI ▼▼▼
 var API_URL = 'https://script.google.com/macros/s/AKfycby-NXGbpi8V53qiQLrwkUXD-G9Ore9WyksRQ660CW4lPinu8f73U8w_Drvui84W6vHy/exec';
@@ -244,6 +346,14 @@ function lsSave(k,val){ try{localStorage.setItem(k,JSON.stringify(val));}catch(e
 
 function loadAll(){
   document.getElementById('hdate').textContent = new Date().toLocaleDateString('pt-BR');
+  // load vendas e cfg do localStorage
+  try{ var ve=lsGet('sm_vendas'); if(ve) vendas=JSON.parse(ve); }catch(e){ vendas=[]; }
+  try{ var c=lsGet('sm_cfg'); if(c){ cfg=JSON.parse(c); applyCfg(); } }catch(e){ cfg={}; }
+  try{ logoB64=lsGet('sm_logo')||''; if(logoB64){ document.getElementById('logo-prev').src=logoB64; document.getElementById('logo-prev').style.display='block'; document.getElementById('logo-lbl').textContent='Logo carregado ✓'; } }catch(e){}
+  // Set today's date on venda form
+  document.getElementById('v-data').value = new Date().toISOString().split('T')[0];
+  renderMesBtns();
+
   if(usandoAPI){
     setStatus('Carregando produtos...','#e4670a');
     fetch(API_URL+'?action=getAll')
@@ -259,16 +369,16 @@ function loadAll(){
         } else {
           setStatus('Erro ao carregar produtos','#dc2626');
         }
-        renderCat(); updateBadge();
+        renderCat(); updateBadge(); updateVendaSelect();
       })
       .catch(function(e){
         setStatus('Sem conexão — usando dados locais','#854F0B');
         try{ var p=lsGet('sm_prods'); if(p) prods=JSON.parse(p); }catch(ex){ prods=[]; }
-        renderCat(); updateBadge();
+        renderCat(); updateBadge(); updateVendaSelect();
       });
   } else {
     try{ var p=lsGet('sm_prods'); if(p) prods=JSON.parse(p); }catch(e){ prods=[]; }
-    renderCat(); updateBadge();
+    renderCat(); updateBadge(); updateVendaSelect();
     setStatus('⚠ Configure a URL da API para sincronizar com todos os dispositivos','#854F0B');
   }
   try{ var o=lsGet('sm_orc'); if(o) orc=JSON.parse(o); }catch(e){ orc=[]; }
@@ -313,6 +423,7 @@ function go(tab, btn){
   if(btn) btn.classList.add('on');
   if(tab==='cat') renderCat();
   if(tab==='orc') renderOrc();
+  if(tab==='vendas'){ updateVendaSelect(); renderVendas(); }
 }
 
 // ── CALCULADORA ──────────────────────────────────────────────
@@ -772,6 +883,404 @@ function delProd(id){
   delete selqty[id];
   deleteProd(id);
   renderCat();
+}
+
+// ── CONFIGURAÇÕES ─────────────────────────────────────────────
+function saveCfg(){
+  cfg={
+    nome:v('cfg-nome'), cnpj:v('cfg-cnpj'), end:v('cfg-end'),
+    tel:v('cfg-tel'), email:v('cfg-email'), insta:v('cfg-insta'),
+    obs:v('cfg-obs'), validade:v('cfg-validade')||'5'
+  };
+  lsSave('sm_cfg',cfg);
+}
+
+function applyCfg(){
+  var fields=['nome','cnpj','end','tel','email','insta','obs','validade'];
+  fields.forEach(function(f){
+    var el=document.getElementById('cfg-'+f);
+    if(el&&cfg[f]) el.value=cfg[f];
+  });
+}
+
+function handleLogo(inp){
+  var file=inp.files[0]; if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var max=300,w=img.width,h=img.height;
+      if(w>max||h>max){if(w>h){h=Math.round(h*max/w);w=max;}else{w=Math.round(w*max/h);h=max;}}
+      var c=document.createElement('canvas');c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      logoB64=c.toDataURL('image/png');
+      lsSave('sm_logo',logoB64);
+      document.getElementById('logo-prev').src=logoB64;
+      document.getElementById('logo-prev').style.display='block';
+      document.getElementById('logo-lbl').textContent='Logo carregado ✓';
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── VENDAS ────────────────────────────────────────────────────
+function renderMesBtns(){
+  var cont=document.getElementById('mes-btns');
+  if(!cont)return;
+  var html='';
+  for(var i=0;i<12;i++){
+    var on=i===mesSelecionado;
+    html+='<button class="btn-sm'+(on?' btn-pri-sm':'')+'" onclick="selecionarMes('+i+')" style="'+(on?'background:var(--orange);color:#fff;border-color:var(--orange)':'')+'">'+(MESES[i].slice(0,3))+'</button>';
+  }
+  cont.innerHTML=html;
+}
+
+function selecionarMes(m){
+  mesSelecionado=m;
+  renderMesBtns();
+  renderVendas();
+}
+
+function updateVendaSelect(){
+  var sel=document.getElementById('v-prod');
+  if(!sel)return;
+  sel.innerHTML='<option value="">Selecione...</option>';
+  prods.forEach(function(p){
+    sel.innerHTML+='<option value="'+p.id+'">'+p.nome+'</option>';
+  });
+}
+
+function calcVenda(){
+  var bruto=parseFloat(document.getElementById('v-bruto').value)||0;
+  var prod=parseFloat(document.getElementById('v-prod-val').value)||0;
+  var liq=bruto-prod;
+  document.getElementById('v-liq').value='R$ '+liq.toFixed(2).replace('.',',');
+}
+
+function salvarVenda(){
+  var data=v('v-data');
+  var prodId=v('v-prod');
+  var qty=parseFloat(v('v-qty'))||1;
+  var bruto=parseFloat(v('v-bruto'))||0;
+  var prodVal=parseFloat(v('v-prod-val'))||0;
+  if(!data||!bruto){showMsg('v-msg','Data e valor bruto são obrigatórios');return;}
+  var prodNome=prodId?(prods.find(function(p){return p.id===prodId;})||{}).nome||'—':'—';
+  var venda={
+    id:Date.now().toString(),
+    data:data, prodId:prodId, produto:prodNome,
+    qty:qty, bruto:bruto, producao:prodVal, liquido:bruto-prodVal,
+    pagamento:v('v-pag'), entrega:v('v-entrega'), canal:v('v-canal'), obs:v('v-obs')
+  };
+  vendas.push(venda);
+  lsSave('sm_vendas',vendas);
+  showMsg('v-msg','✓ Venda registrada!');
+  // limpa form
+  document.getElementById('v-bruto').value='';
+  document.getElementById('v-prod-val').value='';
+  document.getElementById('v-liq').value='';
+  document.getElementById('v-obs').value='';
+  document.getElementById('v-qty').value='1';
+  document.getElementById('v-data').value=new Date().toISOString().split('T')[0];
+  renderVendas();
+}
+
+function renderVendas(){
+  var cont=document.getElementById('v-tabela');
+  var resumoCont=document.getElementById('v-stats');
+  if(!cont)return;
+
+  var filtradas=vendas.filter(function(v){
+    var d=new Date(v.data+'T00:00:00');
+    return d.getMonth()===mesSelecionado && d.getFullYear()===2026;
+  });
+
+  // Resumo
+  var totalBruto=0,totalLiq=0,totalQty=0;
+  filtradas.forEach(function(v){totalBruto+=v.bruto;totalLiq+=v.liquido;totalQty+=v.qty;});
+  if(resumoCont){
+    resumoCont.innerHTML=
+      '<div class="metric"><div class="lbl">Vendas</div><div class="val">'+filtradas.length+'</div></div>'+
+      '<div class="metric"><div class="lbl">Unidades</div><div class="val">'+totalQty+'</div></div>'+
+      '<div class="metric"><div class="lbl">Receita bruta</div><div class="val" style="color:var(--orange)">R$ '+totalBruto.toFixed(2).replace('.',',')+'</div></div>'+
+      '<div class="metric"><div class="lbl">Custo produção</div><div class="val">R$ '+(totalBruto-totalLiq).toFixed(2).replace('.',',')+'</div></div>'+
+      '<div class="metric"><div class="lbl">Líquido</div><div class="val" style="color:var(--green)">R$ '+totalLiq.toFixed(2).replace('.',',')+'</div></div>';
+  }
+
+  if(!filtradas.length){
+    cont.innerHTML='<div class="empty">📊 Nenhuma venda em '+MESES[mesSelecionado]+' 2026.</div>';
+    return;
+  }
+
+  var rows='';
+  filtradas.forEach(function(ve,i){
+    var idx=vendas.indexOf(ve);
+    rows+='<tr>'+
+      '<td>'+ve.data.split('-').reverse().join('/')+'</td>'+
+      '<td>'+ve.produto+'</td>'+
+      '<td style="text-align:center">'+ve.qty+'</td>'+
+      '<td style="text-align:right">R$ '+ve.bruto.toFixed(2).replace('.',',')+'</td>'+
+      '<td style="text-align:right">R$ '+ve.producao.toFixed(2).replace('.',',')+'</td>'+
+      '<td style="text-align:right;color:var(--green);font-weight:600">R$ '+ve.liquido.toFixed(2).replace('.',',')+'</td>'+
+      '<td>'+ve.pagamento+'</td>'+
+      '<td>'+ve.entrega+'</td>'+
+      '<td>'+ve.canal+'</td>'+
+      '<td>'+ve.obs+'</td>'+
+      '<td><button class="btn-sm btn-danger" style="padding:3px 7px;font-size:11px" onclick="delVenda('+idx+')">✕</button></td>'+
+    '</tr>';
+  });
+
+  cont.innerHTML=
+    '<div style="overflow-x:auto">'+
+    '<table style="width:100%;border-collapse:collapse;font-size:12px;background:var(--card);border-radius:var(--radius);overflow:hidden">'+
+    '<thead><tr style="background:var(--orange);color:#fff">'+
+    '<th style="padding:8px;text-align:left;white-space:nowrap">Data</th>'+
+    '<th style="padding:8px;text-align:left">Produto</th>'+
+    '<th style="padding:8px;text-align:center">Qtd</th>'+
+    '<th style="padding:8px;text-align:right;white-space:nowrap">V. Bruto</th>'+
+    '<th style="padding:8px;text-align:right;white-space:nowrap">V. Produção</th>'+
+    '<th style="padding:8px;text-align:right;white-space:nowrap">V. Líquido</th>'+
+    '<th style="padding:8px">Pagamento</th>'+
+    '<th style="padding:8px">Entrega</th>'+
+    '<th style="padding:8px">Venda</th>'+
+    '<th style="padding:8px">Obs</th>'+
+    '<th style="padding:8px"></th>'+
+    '</tr></thead>'+
+    '<tbody>'+rows+'</tbody>'+
+    '</table></div>';
+}
+
+function delVenda(idx){
+  if(!confirm('Excluir esta venda?'))return;
+  vendas.splice(idx,1);
+  lsSave('sm_vendas',vendas);
+  renderVendas();
+}
+
+// ── PDF ATUALIZADO ────────────────────────────────────────────
+function gerarPDF(titulo, linhas, nomearq){
+  var jsPDF = window.jspdf ? window.jspdf.jsPDF : null;
+  if(!jsPDF){ alert('Biblioteca PDF carregando, tente novamente.'); return; }
+  var doc = new jsPDF({unit:'mm',format:'a4'});
+  var W=210, M=18, cW=W-M*2;
+  var orange=[228,103,10], dark=[26,26,26], gray=[100,100,100], lightgray=[245,244,242];
+  var y=18;
+
+  // ─ CABEÇALHO com logo e dados da empresa ─
+  var headerH = 32;
+  doc.setFillColor(orange[0],orange[1],orange[2]);
+  doc.rect(0,0,W,headerH,'F');
+
+  if(logoB64){
+    try{ doc.addImage(logoB64,'PNG',M,4,22,22); }catch(e){}
+    var tx=M+26;
+  } else {
+    var tx=M;
+  }
+  doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+  doc.text(cfg.nome||'Minha Empresa', tx, 11);
+  doc.setFontSize(7.5); doc.setFont('helvetica','normal'); doc.setTextColor(255,220,180);
+  var infoY=16;
+  if(cfg.cnpj){ doc.text('CNPJ: '+cfg.cnpj, tx, infoY); infoY+=4.5; }
+  if(cfg.end){ doc.text(cfg.end, tx, infoY); infoY+=4.5; }
+  var contato=[cfg.tel,cfg.email,cfg.insta].filter(Boolean).join('  ·  ');
+  if(contato) doc.text(contato, tx, infoY);
+
+  y = headerH + 10;
+
+  // ─ Título do documento ─
+  doc.setFontSize(15); doc.setFont('helvetica','bold'); doc.setTextColor(dark[0],dark[1],dark[2]);
+  doc.text(titulo, M, y);
+  doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(gray[0],gray[1],gray[2]);
+  doc.text('Data: '+new Date().toLocaleDateString('pt-BR'), W-M, y, {align:'right'});
+  y += 10;
+
+  // ─ Linhas de conteúdo ─
+  for(var i=0;i<linhas.length;i++){
+    var l=linhas[i];
+    if(y>260){ doc.addPage(); y=20; }
+
+    if(l.type==='section'){
+      doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(orange[0],orange[1],orange[2]);
+      doc.text(l.text.toUpperCase(), M, y); y+=7;
+
+    } else if(l.type==='box'){
+      doc.setFillColor(orange[0],orange[1],orange[2]);
+      doc.roundedRect(M,y,cW,22,3,3,'F');
+      doc.setFontSize(8); doc.setTextColor(255,220,180); doc.setFont('helvetica','normal');
+      doc.text(l.label1||'', M+6, y+7);
+      doc.setFontSize(18); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+      doc.text(l.val1||'', M+6, y+17);
+      if(l.label2){
+        doc.setDrawColor(255,255,255); doc.setLineWidth(0.3); doc.line(cW*0.52+M,y+3,cW*0.52+M,y+19);
+        doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(255,220,180);
+        doc.text(l.label2, cW*0.55+M, y+7);
+        doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+        doc.text(l.val2||'', cW*0.55+M, y+17);
+      }
+      y+=28;
+
+    } else if(l.type==='product'){
+      // Produto com imagem em modo retrato
+      var boxY=y;
+      if(l.foto){
+        try{
+          doc.setFillColor(lightgray[0],lightgray[1],lightgray[2]);
+          doc.roundedRect(M,boxY,35,45,2,2,'F');
+          doc.addImage(l.foto,'JPEG',M+1,boxY+1,33,43);
+          var infoX=M+38;
+        }catch(e){ var infoX=M; }
+      } else {
+        var infoX=M;
+      }
+      doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(dark[0],dark[1],dark[2]);
+      doc.text(l.nome||'', infoX, boxY+8);
+      if(l.sku){ doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(gray[0],gray[1],gray[2]); doc.text('SKU: '+l.sku, infoX, boxY+14); }
+      if(l.tam){ doc.text('Tamanho: '+l.tam, infoX, boxY+19); }
+      doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.setTextColor(orange[0],orange[1],orange[2]);
+      doc.text(l.preco||'', infoX, boxY+27);
+      if(l.desc){ doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(gray[0],gray[1],gray[2]); var dlines=doc.splitTextToSize(l.desc,cW-40); doc.text(dlines,infoX,boxY+33); }
+      y+=50;
+
+    } else if(l.type==='table'){
+      var hdrs=l.headers, rws=l.rows;
+      var colW=[];
+      // Auto col widths
+      if(l.colWidths){ colW=l.colWidths; } else { var cw=cW/hdrs.length; for(var h=0;h<hdrs.length;h++) colW.push(cw); }
+      doc.setFillColor(lightgray[0],lightgray[1],lightgray[2]);
+      doc.rect(M,y,cW,8,'F');
+      doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(gray[0],gray[1],gray[2]);
+      var cx=M;
+      for(var h=0;h<hdrs.length;h++){
+        var align=l.aligns?l.aligns[h]:'left';
+        var tx2=align==='right'?cx+colW[h]-2:(align==='center'?cx+colW[h]/2:cx+2);
+        doc.text(hdrs[h], tx2, y+5.5, {align:align});
+        cx+=colW[h];
+      }
+      y+=10;
+      doc.setFont('helvetica','normal'); doc.setTextColor(dark[0],dark[1],dark[2]);
+      for(var r=0;r<rws.length;r++){
+        if(y>270){ doc.addPage(); y=20; }
+        if(r%2===0){ doc.setFillColor(250,249,248); doc.rect(M,y-3,cW,8,'F'); }
+        doc.setFontSize(9);
+        var cx2=M;
+        for(var c=0;c<rws[r].length;c++){
+          var al=l.aligns?l.aligns[c]:'left';
+          var tx3=al==='right'?cx2+colW[c]-2:(al==='center'?cx2+colW[c]/2:cx2+2);
+          doc.text(String(rws[r][c]||''), tx3, y+2.5, {align:al});
+          cx2+=colW[c];
+        }
+        y+=8;
+        doc.setDrawColor(230,228,224); doc.setLineWidth(0.2); doc.line(M,y-2,W-M,y-2);
+      }
+      y+=6;
+
+    } else if(l.type==='row'){
+      doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(gray[0],gray[1],gray[2]);
+      doc.text(l.label, M, y);
+      doc.setFont('helvetica','bold'); doc.setTextColor(dark[0],dark[1],dark[2]);
+      doc.text(l.val, W-M, y, {align:'right'});
+      y+=7;
+
+    } else if(l.type==='total'){
+      doc.setFillColor(orange[0],orange[1],orange[2]);
+      doc.roundedRect(M,y,cW,12,2,2,'F');
+      doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+      doc.text('TOTAL', M+6, y+8);
+      doc.text(l.val, W-M-6, y+8, {align:'right'});
+      y+=18;
+
+    } else if(l.type==='validade'){
+      doc.setFillColor(255,249,235);
+      doc.roundedRect(M,y,cW,10,2,2,'F');
+      doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(133,79,11);
+      doc.text('⚠ Este orçamento é válido por '+l.dias+' dias a partir de '+new Date().toLocaleDateString('pt-BR'), M+4, y+6.5);
+      y+=14;
+
+    } else if(l.type==='obs'){
+      doc.setFontSize(8); doc.setFont('helvetica','italic'); doc.setTextColor(gray[0],gray[1],gray[2]);
+      var obsLines=doc.splitTextToSize(l.text, cW);
+      doc.text(obsLines, M, y);
+      y+=obsLines.length*4.5+4;
+    }
+  }
+
+  // Rodapé
+  doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(180,180,180);
+  doc.text('Gerado por Shopee Manager  ·  '+new Date().toLocaleDateString('pt-BR'), W/2, 290, {align:'center'});
+
+  doc.save((nomearq||'documento')+'.pdf');
+}
+
+function imprimirCalc(){
+  var d = calcData;
+  if(!d.custo && !d.vShopee){ showMsg('calc-msg','Preencha os dados primeiro.'); return; }
+  var nome = d.nome || 'Produto';
+  var validade = cfg.validade||'5';
+  gerarPDF(
+    'Orçamento — '+nome,
+    [
+      {type:'box', label1:'Pagamento direto', val1:fmt(d.venda), label2:'Via Shopee / marketplace', val2:fmt(d.vShopee)},
+      {type:'validade', dias:validade},
+      {type:'section', text:'Detalhamento de custos'},
+      {type:'table',
+        headers:['Item','Valor'],
+        colWidths:[120,54],
+        aligns:['left','right'],
+        rows:[
+          ['Energia ('+d.kwh+' kWh × R$'+d.taxa_kwh+')', fmt(d.kwh*d.taxa_kwh)],
+          ['Filamento ('+d.fil+'g × R$'+d.filg+'/g)', fmt(d.fil*d.filg)],
+          ['Embalagem', fmt(d.emb)],
+          ['Máquina ('+d.hrs+'h × R$'+d.custoHora.toFixed(2)+'/h)', fmt(d.maquina)],
+          ['Custo total', fmt(d.custo)],
+          ['Taxa Shopee ('+d.taxaShopee+'%)', fmt(d.txShopee)],
+          ['Lucro estimado', fmt(d.lucro)],
+          ['Margem real', d.margemReal.toFixed(1)+'%'],
+        ]
+      },
+      cfg.obs ? {type:'obs', text:cfg.obs} : null
+    ].filter(Boolean),
+    'Orcamento_'+nome.replace(/[^a-z0-9]/gi,'_')
+  );
+}
+
+function printOrc(){
+  var nome=v('cnome')||'Cliente';
+  var tel=v('ctel')||'';
+  var desc=parseFloat(document.getElementById('odesc').value)||0;
+  var acr=parseFloat(document.getElementById('oacr').value)||0;
+  var sub=0;
+  for(var i=0;i<orc.length;i++) sub+=parseFloat(orc[i].preco)*orc[i].qty;
+  var total=sub*(1-desc/100)*(1+acr/100);
+  var validade=cfg.validade||'5';
+
+  var linhas=[];
+  linhas.push({type:'section', text:'Cliente: '+nome+(tel?' | '+tel:'')});
+
+  // Produtos com imagem em modo retrato
+  for(var i=0;i<orc.length;i++){
+    var o=orc[i];
+    // Busca produto completo para pegar foto e detalhes
+    var p=null; for(var j=0;j<prods.length;j++) if(prods[j].id===o.id){p=prods[j];break;}
+    linhas.push({
+      type:'product',
+      nome:o.nome,
+      sku:p?p.sku:'',
+      tam:p?p.tam:'',
+      preco:fmt(o.preco)+' / un  ×'+o.qty+'  =  R$ '+(o.preco*o.qty).toFixed(2).replace('.',','),
+      desc:p?p.desc:'',
+      foto:p?p.foto:null
+    });
+  }
+
+  linhas.push({type:'section', text:'Valores'});
+  if(desc>0) linhas.push({type:'row', label:'Desconto ('+desc+'%)', val:'-'+fmt(sub*desc/100)});
+  if(acr>0) linhas.push({type:'row', label:'Acréscimo ('+acr+'%)', val:'+'+fmt(sub*(1-desc/100)*acr/100)});
+  linhas.push({type:'total', val:fmt(total)});
+  linhas.push({type:'validade', dias:validade});
+  if(cfg.obs) linhas.push({type:'obs', text:cfg.obs});
+
+  gerarPDF('Orçamento — '+nome, linhas, 'Orcamento_'+nome.replace(/\s+/g,'_'));
 }
 
 loadAll();
