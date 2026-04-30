@@ -389,24 +389,29 @@ function save(){ lsSave('sm_orc',orc); }
 function syncProd(prod){
   if(!usandoAPI){ lsSave('sm_prods',prods); return; }
   setStatus('Salvando...','#e4670a');
-  var body = JSON.stringify({
-    id: prod.id,
-    nome: prod.nome||'',
-    sku: prod.sku||'',
-    cat: prod.cat||'',
-    tam: prod.tam||'',
+  // Usa GET com dados em JSON encodado para evitar CORS
+  var dados = encodeURIComponent(JSON.stringify({
+    id:    String(prod.id||''),
+    nome:  String(prod.nome||''),
+    sku:   String(prod.sku||''),
+    cat:   String(prod.cat||''),
+    tam:   String(prod.tam||''),
     venda: prod.venda_cat||prod.vShopee||0,
-    stk: prod.stk||0,
-    desc: prod.desc||'',
-    foto: prod.foto||''
-  });
-  fetch(API_URL+'?action=save', {method:'POST', body:body})
+    stk:   prod.stk||0,
+    desc:  String(prod.desc||''),
+    foto:  prod.foto||''
+  }));
+  fetch(API_URL+'?action=save&data='+dados)
     .then(function(r){ return r.json(); })
     .then(function(data){
-      if(data.success){ setStatus('✓ Salvo com sucesso!','#3B6D11'); setTimeout(function(){setStatus('','');},2000); }
-      else { setStatus('Erro ao salvar: '+data.error,'#dc2626'); }
+      if(data.success){
+        setStatus('✓ Salvo!','#3B6D11');
+        setTimeout(function(){setStatus('','');},2000);
+      } else {
+        setStatus('Erro: '+(data.error||'desconhecido'),'#dc2626');
+      }
     })
-    .catch(function(){ setStatus('Erro de conexão ao salvar','#dc2626'); });
+    .catch(function(e){ setStatus('Erro de conexão ao salvar','#dc2626'); });
 }
 
 function deleteProd(id){
