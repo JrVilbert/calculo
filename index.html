@@ -2,214 +2,715 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shopee Manager</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shopee Manager Pro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#fff;--bg2:#f5f5f5;--bg3:#ebebeb;--text:#111;--text2:#666;--text3:#999;--border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.22);--green:#1a7a4a;--green-bg:#eaf4ee;--red:#b91c1c;--red-bg:#fef2f2;--amber:#92400e;--amber-bg:#fffbeb;--blue:#1d4ed8;--blue-bg:#eff6ff;--radius:8px;--radius-lg:12px}
-@media(prefers-color-scheme:dark){:root{--bg:#1a1a1a;--bg2:#242424;--bg3:#2e2e2e;--text:#f0f0f0;--text2:#aaa;--text3:#777;--border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2);--green:#34d399;--green-bg:#064e3b;--red:#f87171;--red-bg:#450a0a;--amber:#fcd34d;--amber-bg:#451a03;--blue:#60a5fa;--blue-bg:#1e3a5f}}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f8f7f5;--card:#fff;--border:#e5e2db;--text:#1a1a1a;--muted:#6b6b6b;
+  --orange:#e4670a;--orange-light:#fff3eb;
+  --green:#3B6D11;--green-bg:#eaf3de;
+  --red:#A32D2D;--red-bg:#FCEBEB;
+  --radius:10px;--radius-sm:6px;
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#1a1a18;--card:#232321;--border:#333;--text:#f0ede8;--muted:#999;--orange-light:#2a1a08}
+}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-.container{max-width:900px;margin:0 auto;padding:16px}
-.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:0.5px solid var(--border)}
-.header h1{font-size:20px;font-weight:600}
-.header p{font-size:12px;color:var(--text2);margin-top:2px}
-.tabs{display:flex;border-bottom:0.5px solid var(--border);margin-bottom:20px}
-.tab{padding:10px 18px;font-size:14px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--text2);border-bottom:2px solid transparent;transition:all .15s}
-.tab.active{color:var(--text);border-bottom-color:var(--text)}
-.section{display:none}.section.active{display:block}
-.btn{padding:8px 16px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);color:var(--text);transition:all .1s}
-.btn:hover{background:var(--bg2)}.btn:active{transform:scale(.98)}
-.btn-primary{background:var(--text);color:var(--bg);border-color:var(--text)}.btn-primary:hover{opacity:.85}
-.btn-danger{border-color:var(--red);color:var(--red)}.btn-success{border-color:var(--green);color:var(--green)}
-.form-group{margin-bottom:12px}
-.form-group label{display:block;font-size:12px;color:var(--text2);margin-bottom:4px;font-weight:500}
-.form-group input,.form-group textarea{width:100%;padding:9px 11px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);outline:none}
-.form-group input:focus,.form-group textarea:focus{border-color:var(--text)}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.img-upload{border:1.5px dashed var(--border2);border-radius:var(--radius-lg);padding:16px;text-align:center;cursor:pointer;transition:all .15s}
-.img-upload:hover{background:var(--bg2)}.img-upload input{display:none}
-.img-preview{width:100%;height:150px;object-fit:cover;border-radius:var(--radius);margin-top:10px}
-.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:10px;margin-bottom:14px}
-.pcard{border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:10px;background:var(--bg);transition:border-color .15s}
-.pcard.selected{border:2px solid var(--text);background:var(--bg2)}
-.pcard-img{width:100%;height:110px;border-radius:var(--radius);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:8px;overflow:hidden}
+.app{max-width:540px;margin:0 auto;padding-bottom:80px}
+header{background:var(--card);border-bottom:1px solid var(--border);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.logo{font-size:17px;font-weight:700;color:var(--orange)}
+nav{display:flex;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:53px;z-index:9;overflow-x:auto}
+nav button{flex:1;padding:12px 4px;font-size:12px;border:none;background:none;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;font-weight:500;white-space:nowrap;transition:.15s}
+nav button.on{color:var(--orange);border-bottom-color:var(--orange)}
+.sec{display:none;padding:14px}.sec.on{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.ctitle{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.fg{margin-bottom:10px}
+.fg label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:500}
+.fg input,.fg textarea,.fg select{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--card);color:var(--text)}
+.fg input[readonly]{background:var(--orange-light);color:var(--orange);font-weight:600}
+.fg input:focus{outline:2px solid var(--orange);border-color:transparent}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{width:100%;padding:11px;border-radius:var(--radius-sm);border:none;font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
+.btn-pri{background:var(--orange);color:#fff}.btn-pri:active{opacity:.85}
+.btn-out{background:var(--card);border:1px solid var(--border);color:var(--text)}.btn-out:active{background:var(--bg)}
+.btn-sm{padding:6px 12px;font-size:12px;font-weight:600;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer}
+.btn-danger{border-color:#f09595;color:var(--red)}
+.btn-green{border-color:#86efac;color:var(--green)}
+.results{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
+.metric{background:var(--bg);border-radius:var(--radius-sm);padding:10px}
+.metric .lbl{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}
+.metric .val{font-size:15px;font-weight:600}
+.metric.hi .val{color:var(--orange)}
+.resumo{background:var(--orange-light);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:10px;font-size:13px;line-height:1.7;display:none}
+.btns{display:flex;flex-direction:column;gap:8px}
+.empty{text-align:center;padding:30px 20px;color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px;margin-bottom:12px}
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px;transition:border-color .15s}
+.pcard.sel{border:2px solid var(--orange);background:var(--orange-light)}
+.pcard-img{width:100%;height:90px;background:var(--bg);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:8px;overflow:hidden}
 .pcard-img img{width:100%;height:100%;object-fit:cover}
-.pcard-sku{font-size:11px;color:var(--text2);margin-bottom:2px}
-.pcard-name{font-size:13px;font-weight:500;margin-bottom:3px}
-.pcard-price{font-size:14px;font-weight:600;margin-bottom:8px}
-.qty-ctrl{display:flex;align-items:center;gap:6px;margin-bottom:8px}
-.qty-ctrl button{width:28px;height:28px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:16px;cursor:pointer;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center}
-.qty-ctrl span{min-width:28px;text-align:center;font-size:14px;font-weight:500}
-.pcard-actions{display:flex;gap:4px}
-.margem-tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:20px;font-weight:500;margin-left:4px}
-.m-low{background:var(--red-bg);color:var(--red)}.m-mid{background:var(--amber-bg);color:var(--amber)}.m-ok{background:var(--green-bg);color:var(--green)}
-.sel-bar{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
-.orc-item{border:0.5px solid var(--border);border-radius:var(--radius);padding:10px 12px;display:flex;gap:10px;align-items:center;background:var(--bg);margin-bottom:8px}
-.orc-thumb{width:46px;height:46px;border-radius:var(--radius);flex-shrink:0;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden}
-.orc-thumb img{width:100%;height:100%;object-fit:cover}
-.orc-info{flex:1;min-width:0}
-.orc-info .n{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.orc-info .p{font-size:12px;color:var(--text2)}
-.orc-qty{display:flex;align-items:center;gap:4px;flex-shrink:0}
-.orc-qty button{width:26px;height:26px;border:0.5px solid var(--border2);border-radius:4px;font-size:14px;cursor:pointer;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center}
-.orc-qty span{min-width:24px;text-align:center;font-size:13px;font-weight:500}
-.orc-sub{font-size:13px;font-weight:500;min-width:76px;text-align:right;flex-shrink:0}
-.total-card{background:var(--bg2);border-radius:var(--radius);padding:14px;margin-bottom:14px}
-.total-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:4px 0;color:var(--text2)}
-.total-row input{width:56px;padding:3px 7px;font-size:13px;border:0.5px solid var(--border2);border-radius:4px;background:var(--bg);color:var(--text);outline:none}
-.total-row.final{font-size:16px;font-weight:600;color:var(--text);border-top:0.5px solid var(--border);margin-top:8px;padding-top:10px}
-.cli-block{border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:12px;margin-bottom:14px;background:var(--bg)}
-.sect-label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:10px;padding-bottom:8px;border-bottom:0.5px solid var(--border)}
-.preco-calc{background:var(--blue-bg);border-radius:var(--radius);padding:12px;margin-top:10px}
-.preco-calc p{font-size:12px;color:var(--blue);margin-bottom:6px;font-weight:500}
-.preco-calc .resultado{font-size:16px;font-weight:600;color:var(--blue)}
-.empty{text-align:center;padding:40px 20px;color:var(--text2);font-size:14px}
-.empty span{display:block;font-size:36px;margin-bottom:10px}
-.badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:var(--text);color:var(--bg);border-radius:20px;font-size:11px;font-weight:600;margin-left:4px}
-.search-row{display:flex;gap:8px;margin-bottom:12px}
-.search-row input{flex:1;padding:9px 12px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);outline:none}
-.margem-btns{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
-.orc-actions{display:flex;gap:8px;flex-wrap:wrap}
-@media(max-width:500px){.form-row{grid-template-columns:1fr}.product-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr))}}
+.pcard-name{font-size:12px;font-weight:600;margin-bottom:2px}
+.pcard-price{font-size:13px;font-weight:700;color:var(--orange);margin-bottom:8px}
+.qrow{display:flex;align-items:center;gap:5px;margin-bottom:8px}
+.qrow button{width:26px;height:26px;border:1px solid var(--border);border-radius:4px;background:var(--bg);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center}
+.qrow span{min-width:22px;text-align:center;font-size:13px;font-weight:600}
+.cact{display:flex;gap:4px}
+.selbar{background:var(--orange-light);border:1px solid #f8c89a;border-radius:var(--radius-sm);padding:10px 14px;display:none;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.oitem{border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 11px;display:flex;gap:8px;align-items:center;margin-bottom:8px;background:var(--card)}
+.othumb{width:40px;height:40px;border-radius:var(--radius-sm);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;overflow:hidden}
+.othumb img{width:100%;height:100%;object-fit:cover}
+.oinfo{flex:1;min-width:0}
+.oname{font-size:13px;font-weight:600}
+.oprice{font-size:11px;color:var(--muted)}
+.oqrow{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.oqrow button{width:22px;height:22px;border:1px solid var(--border);border-radius:4px;background:var(--bg);cursor:pointer;font-size:13px}
+.oqrow span{min-width:20px;text-align:center;font-size:12px;font-weight:600}
+.osub{font-size:12px;font-weight:700;min-width:64px;text-align:right;flex-shrink:0}
+.scard{background:var(--bg);border-radius:var(--radius);padding:12px;margin-bottom:12px}
+.srow{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:3px 0;color:var(--muted)}
+.srow input{width:52px;padding:3px 6px;font-size:12px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--text)}
+.srow.fin{font-size:16px;font-weight:700;color:var(--text);border-top:1px solid var(--border);margin-top:8px;padding-top:8px}
+.uparea{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;cursor:pointer;transition:all .2s}
+.uparea:hover{border-color:var(--orange);background:var(--orange-light)}
+.uparea input{display:none}
+.upimg{width:100%;height:110px;object-fit:cover;border-radius:var(--radius-sm);margin-top:8px}
+.badge{display:inline-block;background:var(--orange);color:#fff;padding:1px 7px;border-radius:20px;font-size:11px;font-weight:700;margin-left:4px}
+.msg{font-size:12px;color:var(--muted);margin-top:8px;min-height:16px;text-align:center}
 </style>
 </head>
 <body>
-<div class="container">
-  <div class="header">
-    <div><h1>Shopee Manager</h1><p id="lbl-count">Carregando...</p></div>
-    <span style="font-size:11px;background:var(--blue-bg);color:var(--blue);padding:3px 10px;border-radius:20px;font-weight:500">Pro</span>
+<div class="app">
+<header>
+  <span class="logo">Shopee Manager</span>
+  <span style="font-size:11px;color:var(--muted)" id="hdate"></span>
+</header>
+<nav>
+  <button class="on" onclick="go('calc',this)">Calculadora</button>
+  <button onclick="go('cat',this)">Catálogo</button>
+  <button onclick="go('orc',this)">Orçamento<span class="badge" id="obadge" style="display:none">0</span></button>
+  <button onclick="go('add',this)">+ Produto</button>
+</nav>
+
+<!-- CALCULADORA -->
+<div class="sec on" id="calc">
+  <div class="card">
+    <div class="ctitle">Dados do produto</div>
+    <div class="fg"><label>Nome do produto</label><input id="c-nome" placeholder="Ex: Chaveiro Academia 4un" oninput="calcular()"></div>
+    <div class="fg"><label>Descrição</label><textarea id="c-desc" rows="2" placeholder="Detalhes para o cliente..." style="resize:vertical"></textarea></div>
   </div>
-  <div class="tabs">
-    <button class="tab active" onclick="go('catalogo')">Catálogo</button>
-    <button class="tab" onclick="go('orcamento')">Orçamento<span class="badge" id="orc-badge" style="display:none"></span></button>
-    <button class="tab" onclick="go('cadastro')">+ Produto</button>
-  </div>
-  <div class="section active" id="tab-catalogo">
-    <div class="search-row">
-      <input type="text" id="search" placeholder="Buscar por nome, SKU ou categoria..." oninput="renderCatalogo()">
-      <button class="btn" onclick="clearSel()">Limpar</button>
+  <div class="card">
+    <div class="ctitle">Custos de produção</div>
+    <div class="row2">
+      <div class="fg"><label>Consumo kWh</label><input id="c-kwh" type="number" value="1" min="0" step="0.1" oninput="calcular()"></div>
+      <div class="fg"><label>Taxa luz (R$/kWh)</label><input id="c-taxa" type="number" value="0.185" min="0" step="0.001" oninput="calcular()"></div>
     </div>
-    <div id="sel-bar" class="sel-bar" style="display:none">
-      <span id="sel-txt" style="font-size:13px;font-weight:500"></span>
-      <button class="btn btn-primary" onclick="addSelToOrc()">Adicionar ao orçamento ↗</button>
+    <div class="row2">
+      <div class="fg"><label>Filamento (g)</label><input id="c-fil" type="number" value="100" min="0" oninput="calcular()"></div>
+      <div class="fg"><label>Custo filam. (R$/g)</label><input id="c-filg" type="number" value="0.35" min="0" step="0.01" oninput="calcular()"></div>
     </div>
-    <div class="product-grid" id="pgrid"></div>
-    <div class="empty" id="cat-empty" style="display:none"><span>📦</span>Nenhum produto cadastrado.<br><button class="btn btn-primary" style="margin-top:12px" onclick="go('cadastro')">Cadastrar primeiro produto</button></div>
-  </div>
-  <div class="section" id="tab-orcamento">
-    <div class="cli-block">
-      <p class="sect-label">Dados do cliente</p>
-      <div class="form-row">
-        <div class="form-group" style="margin-bottom:0"><label>Nome</label><input type="text" id="cli-nome" placeholder="Nome do cliente"></div>
-        <div class="form-group" style="margin-bottom:0"><label>WhatsApp</label><input type="text" id="cli-tel" placeholder="(51) 99999-9999"></div>
-      </div>
+    <div class="row2">
+      <div class="fg"><label>Embalagem (R$)</label><input id="c-emb" type="number" value="1.75" min="0" step="0.05" oninput="calcular()"></div>
+      <div class="fg"><label>Horas de impressão</label><input id="c-hrs" type="number" value="2" min="0" step="0.5" oninput="calcular()"></div>
     </div>
-    <div id="orc-list"></div>
-    <div class="empty" id="orc-empty" style="display:none"><span>🧾</span>Nenhum item. Selecione produtos no catálogo.</div>
-    <div id="total-area" style="display:none">
-      <div class="total-card">
-        <div class="total-row"><span>Subtotal</span><span id="t-sub">R$ 0,00</span></div>
-        <div class="total-row"><span>Desconto (%)</span><span style="display:flex;align-items:center;gap:6px"><input type="number" id="desconto" min="0" max="100" value="0" step="0.5" oninput="calcTotal()"> %</span></div>
-        <div class="total-row"><span>Acréscimo (%)</span><span style="display:flex;align-items:center;gap:6px"><input type="number" id="acrescimo" min="0" max="100" value="0" step="0.5" oninput="calcTotal()"> %</span></div>
-        <div class="total-row final"><span>Total</span><span id="t-total">R$ 0,00</span></div>
-      </div>
-      <div class="orc-actions">
-        <button class="btn btn-primary" onclick="printOrc()">🖨 Imprimir / PDF</button>
-        <button class="btn btn-success" onclick="sendWA()">WhatsApp ↗</button>
-        <button class="btn btn-danger" onclick="clearOrc()">Limpar orçamento</button>
-      </div>
+    <div class="row2">
+      <div class="fg"><label>Custo/hora máquina (R$)</label><input id="c-hora" type="number" value="2" min="0" step="0.5" oninput="calcular()"></div>
+      <div class="fg"><label style="color:var(--orange)">Custo máquina (calculado)</label><input id="r-maquina" readonly></div>
     </div>
   </div>
-  <div class="section" id="tab-cadastro">
-    <div style="max-width:520px">
-      <div class="form-group">
-        <label>Foto do produto</label>
-        <div class="img-upload" onclick="document.getElementById('foto-inp').click()" id="foto-area">
-          <input type="file" id="foto-inp" accept="image/*" onchange="handleFoto(this)">
-          <p style="font-size:13px;color:var(--text2)" id="foto-label">Clique para adicionar foto</p>
-          <p style="font-size:11px;color:var(--text3);margin-top:3px">JPG, PNG ou WEBP</p>
-          <img id="foto-prev" class="img-preview" style="display:none">
-        </div>
-      </div>
-      <div class="form-group"><label>Nome do produto *</label><input type="text" id="p-nome" placeholder="Ex: Camiseta Preta Tamanho M"></div>
-      <div class="form-row">
-        <div class="form-group"><label>SKU / Código</label><input type="text" id="p-sku" placeholder="CAM-001"></div>
-        <div class="form-group"><label>Categoria</label><input type="text" id="p-cat" placeholder="Roupas, Acessórios..."></div>
-      </div>
-      <div style="border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:12px">
-        <p class="sect-label">Precificação com margem de lucro</p>
-        <div class="form-row">
-          <div class="form-group" style="margin-bottom:0"><label>Preço de custo (R$)</label><input type="number" id="p-custo" placeholder="0,00" step="0.01" oninput="calcMargem()"></div>
-          <div class="form-group" style="margin-bottom:0">
-            <label>Multiplicador de margem</label>
-            <div class="margem-btns">
-              <button class="btn" style="padding:3px 10px;font-size:12px" onclick="setMargem(2)">×2</button>
-              <button class="btn" style="padding:3px 10px;font-size:12px" onclick="setMargem(2.5)">×2,5</button>
-              <button class="btn" style="padding:3px 10px;font-size:12px" onclick="setMargem(3)">×3</button>
-              <button class="btn" style="padding:3px 10px;font-size:12px" onclick="setMargem(4)">×4</button>
-            </div>
-            <input type="number" id="p-margem" placeholder="Ex: 2.5" step="0.1" min="1" oninput="calcMargem()">
-          </div>
-        </div>
-        <div class="preco-calc" id="preco-calc" style="display:none">
-          <p>Preço sugerido de venda</p>
-          <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
-            <span class="resultado" id="preco-sugerido">R$ 0,00</span>
-            <button class="btn" style="font-size:12px;padding:4px 12px" onclick="usarSugerido()">Usar este valor</button>
-          </div>
-        </div>
-      </div>
-      <div class="form-group"><label>Preço de venda (R$) *</label><input type="number" id="p-venda" placeholder="0,00" step="0.01"></div>
-      <div class="form-row">
-        <div class="form-group"><label>Estoque (unidades)</label><input type="number" id="p-estoque" placeholder="0" min="0"></div>
-        <div class="form-group"><label>Peso (kg) — opcional</label><input type="number" id="p-peso" placeholder="0.5" step="0.1"></div>
-      </div>
-      <div class="form-group"><label>Descrição / Observações</label><textarea id="p-desc" rows="2" placeholder="Cor, tamanho, material..." style="resize:vertical"></textarea></div>
-      <div style="display:flex;gap:8px;margin-bottom:12px">
-        <button class="btn btn-primary" onclick="salvar()">Salvar produto</button>
-        <button class="btn" onclick="limparForm()">Limpar</button>
-      </div>
-      <p id="cad-msg" style="font-size:13px;display:none"></p>
+  <div class="card">
+    <div class="ctitle">Preço e margem</div>
+    <div class="row2">
+      <div class="fg"><label>Taxa Shopee (%)</label><input id="c-shopee" type="number" value="20" min="0" max="100" oninput="calcular()"></div>
+      <div class="fg"><label>Margem de lucro (%)</label><input id="c-margem" type="number" value="150" min="0" oninput="calcular()"></div>
+    </div>
+    <div class="fg">
+      <label>Ajuste para cliente (%) — negativo = desconto</label>
+      <input id="c-ajuste" type="number" value="0" step="1" oninput="calcular()">
+    </div>
+  </div>
+  <div class="card">
+    <div class="ctitle">Resultado</div>
+    <div class="results">
+      <div class="metric"><div class="lbl">Custo real</div><div class="val" id="r-custo">R$ -</div></div>
+      <div class="metric hi"><div class="lbl">Venda direta</div><div class="val" id="r-venda">R$ -</div></div>
+      <div class="metric"><div class="lbl">Lucro</div><div class="val" id="r-lucro">R$ -</div></div>
+      <div class="metric"><div class="lbl">Taxa Shopee</div><div class="val" id="r-txshopee">R$ -</div></div>
+      <div class="metric hi"><div class="lbl">Venda Shopee</div><div class="val" id="r-vshopee">R$ -</div></div>
+      <div class="metric"><div class="lbl">Margem real</div><div class="val" id="r-margem">-%</div></div>
+    </div>
+    <div class="resumo" id="r-resumo"></div>
+    <div class="btns">
+      <button class="btn btn-pri" onclick="salvarCalc()">Salvar no catálogo</button>
+      <button class="btn btn-out" onclick="copiarPreco()">Copiar preço para cliente</button>
+      <button class="btn btn-out" onclick="imprimirCalc()">Imprimir orçamento</button>
+    </div>
+    <div class="msg" id="calc-msg"></div>
+  </div>
+</div>
+
+<!-- CATÁLOGO -->
+<div class="sec" id="cat">
+  <div style="display:flex;gap:8px;margin-bottom:10px">
+    <input type="text" id="srch" placeholder="Buscar nome, SKU ou categoria..." oninput="renderCat()" style="flex:1;padding:9px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--card);color:var(--text)">
+    <button class="btn-sm" onclick="clearSel()">Limpar</button>
+  </div>
+  <div id="selbar" class="selbar">
+    <span id="seltxt" style="font-size:13px;font-weight:600"></span>
+    <button class="btn-sm" style="background:var(--orange);color:#fff;border-color:var(--orange)" onclick="addToOrc()">Adicionar ao orçamento ↗</button>
+  </div>
+  <div class="grid" id="pgrid"></div>
+  <div class="empty" id="cempty" style="display:none">📦 Sem produtos.<br><button class="btn-sm" style="margin-top:10px" onclick="go('add',document.querySelectorAll('nav button')[3])">Cadastrar produto</button></div>
+</div>
+
+<!-- ORÇAMENTO -->
+<div class="sec" id="orc">
+  <div class="card" style="padding:12px">
+    <div class="ctitle" style="margin-bottom:8px">Dados do cliente</div>
+    <div class="row2">
+      <div class="fg" style="margin-bottom:0"><input id="cnome" placeholder="Nome do cliente"></div>
+      <div class="fg" style="margin-bottom:0"><input id="ctel" placeholder="WhatsApp"></div>
+    </div>
+  </div>
+  <div id="olitems"></div>
+  <div class="empty" id="oempty" style="display:none">🧾 Nenhum item. Selecione no Catálogo.</div>
+  <div id="osumm" style="display:none">
+    <div class="scard">
+      <div class="srow"><span>Subtotal</span><span id="osub">R$ 0,00</span></div>
+      <div class="srow"><span>Desconto (%)</span><span style="display:flex;align-items:center;gap:4px"><input type="number" id="odesc" min="0" max="100" value="0" step="0.5" onchange="calcTotal()">%</span></div>
+      <div class="srow"><span>Acréscimo (%)</span><span style="display:flex;align-items:center;gap:4px"><input type="number" id="oacr" min="0" max="100" value="0" step="0.5" onchange="calcTotal()">%</span></div>
+      <div class="srow fin"><span>Total</span><span id="ototal">R$ 0,00</span></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-pri" onclick="printOrc()">🖨 Imprimir / PDF</button>
+      <button class="btn btn-out btn-green" onclick="sendWA()">WhatsApp ↗</button>
+      <button class="btn btn-out btn-danger" onclick="clearOrc()">Limpar orçamento</button>
     </div>
   </div>
 </div>
-<script>
-let products=[],orcamento=[],selected={},editId=null,fotoB64=null;
-const DB='shopee_v3',ORC='shopee_orc_v3';
-function saveAll(){try{localStorage.setItem(DB,JSON.stringify(products));}catch(e){}try{localStorage.setItem(ORC,JSON.stringify(orcamento));}catch(e){}}
-function loadAll(){try{const d=localStorage.getItem(DB);if(d)products=JSON.parse(d);}catch(e){products=[];}try{const d=localStorage.getItem(ORC);if(d)orcamento=JSON.parse(d);}catch(e){orcamento=[];}updateCount();renderCatalogo();updateBadge();}
-function updateCount(){document.getElementById('lbl-count').textContent=products.length+' produto(s) cadastrado(s)';}
-function go(tab){['catalogo','orcamento','cadastro'].forEach((t,i)=>{document.querySelectorAll('.tab')[i].classList.toggle('active',t===tab);document.getElementById('tab-'+t).classList.toggle('active',t===tab);});if(tab==='orcamento')renderOrc();if(tab==='catalogo')renderCatalogo();}
-function renderCatalogo(){const q=(document.getElementById('search').value||'').toLowerCase();const f=products.filter(p=>p.nome.toLowerCase().includes(q)||(p.sku||'').toLowerCase().includes(q)||(p.cat||'').toLowerCase().includes(q));const grid=document.getElementById('pgrid'),empty=document.getElementById('cat-empty');if(!f.length){grid.innerHTML='';empty.style.display='block';return;}empty.style.display='none';grid.innerHTML=f.map(p=>{const qty=selected[p.id]||0,sel=qty>0;const img=p.foto?'<img src="'+p.foto+'" alt="'+p.nome+'">'+'':'<span>📦</span>';const m=p.custo&&p.venda?(parseFloat(p.venda)/parseFloat(p.custo)).toFixed(2):null;const mTag=m?'<span class="margem-tag '+(m<2?'m-low':m<3?'m-mid':'m-ok')+'">×'+m+'</span>':'';return '<div class="pcard'+(sel?' selected':'')+'"><div class="pcard-img">'+img+'</div><div class="pcard-sku">'+(p.sku||'')+mTag+'</div><div class="pcard-name">'+p.nome+'</div><div class="pcard-price">R$ '+parseFloat(p.venda).toFixed(2).replace('.',',')+'</div><div class="qty-ctrl"><button onclick="chgSel(''+p.id+'',-1)">−</button><span>'+qty+'</span><button onclick="chgSel(''+p.id+'',1)">+</button></div><div class="pcard-actions"><button class="btn" style="flex:1;padding:4px 6px;font-size:11px" onclick="editProd(''+p.id+'')">Editar</button><button class="btn btn-danger" style="padding:4px 8px;font-size:11px" onclick="delProd(''+p.id+'')">✕</button></div></div>';}).join('');updateSelBar();}
-function chgSel(id,d){selected[id]=(selected[id]||0)+d;if(selected[id]<0)selected[id]=0;renderCatalogo();}
-function updateSelBar(){const total=Object.values(selected).reduce((a,b)=>a+b,0),bar=document.getElementById('sel-bar');if(total>0){bar.style.display='flex';const items=Object.values(selected).filter(v=>v>0).length;document.getElementById('sel-txt').textContent=items+' produto(s) — '+total+' un. selecionada(s)';}else bar.style.display='none';}
-function clearSel(){selected={};document.getElementById('search').value='';renderCatalogo();}
-function addSelToOrc(){Object.entries(selected).forEach(([id,qty])=>{if(!qty)return;const p=products.find(x=>x.id===id);if(!p)return;const ex=orcamento.find(o=>o.id===id);if(ex)ex.qty+=qty;else orcamento.push({...p,qty});});selected={};saveAll();updateBadge();go('orcamento');}
-function updateBadge(){const b=document.getElementById('orc-badge'),t=orcamento.reduce((s,o)=>s+o.qty,0);if(t>0){b.style.display='inline-flex';b.textContent=t;}else b.style.display='none';}
-function renderOrc(){const list=document.getElementById('orc-list'),empty=document.getElementById('orc-empty'),ta=document.getElementById('total-area');if(!orcamento.length){list.innerHTML='';empty.style.display='block';ta.style.display='none';return;}empty.style.display='none';ta.style.display='block';list.innerHTML=orcamento.map((o,i)=>{const sub=(parseFloat(o.venda)*o.qty).toFixed(2).replace('.',',');const thumb=o.foto?'<div class="orc-thumb"><img src="'+o.foto+'"></div>':'<div class="orc-thumb">📦</div>';return '<div class="orc-item">'+thumb+'<div class="orc-info"><div class="n">'+o.nome+'</div><div class="p">R$ '+parseFloat(o.venda).toFixed(2).replace('.',',')+' / un</div></div><div class="orc-qty"><button onclick="chgOrc('+i+',-1)">−</button><span>'+o.qty+'</span><button onclick="chgOrc('+i+',1)">+</button></div><div class="orc-sub">R$ '+sub+'</div><button class="btn btn-danger" style="padding:3px 8px;font-size:11px;flex-shrink:0" onclick="rmOrc('+i+')">✕</button></div>';}).join('');calcTotal();}
-function chgOrc(i,d){orcamento[i].qty+=d;if(orcamento[i].qty<=0)orcamento.splice(i,1);saveAll();updateBadge();renderOrc();}
-function rmOrc(i){orcamento.splice(i,1);saveAll();updateBadge();renderOrc();}
-function calcTotal(){const sub=orcamento.reduce((s,o)=>s+parseFloat(o.venda)*o.qty,0);const desc=parseFloat(document.getElementById('desconto').value)||0;const acr=parseFloat(document.getElementById('acrescimo').value)||0;const total=sub*(1-desc/100)*(1+acr/100);document.getElementById('t-sub').textContent='R$ '+sub.toFixed(2).replace('.',',');document.getElementById('t-total').textContent='R$ '+total.toFixed(2).replace('.',',');}
-function clearOrc(){if(!confirm('Limpar todo o orçamento?'))return;orcamento=[];saveAll();updateBadge();renderOrc();}
-function sendWA(){const nome=document.getElementById('cli-nome').value||'Cliente';const desc=parseFloat(document.getElementById('desconto').value)||0;const acr=parseFloat(document.getElementById('acrescimo').value)||0;const sub=orcamento.reduce((s,o)=>s+parseFloat(o.venda)*o.qty,0);const total=sub*(1-desc/100)*(1+acr/100);let msg='*Orçamento — '+nome+'*
-📅 '+new Date().toLocaleDateString('pt-BR')+'
 
-';orcamento.forEach(o=>{msg+='• '+o.nome+' x'+o.qty+' = R$ '+(parseFloat(o.venda)*o.qty).toFixed(2).replace('.',',')+'
-';});msg+='
-Subtotal: R$ '+sub.toFixed(2).replace('.',',');if(desc>0)msg+='
-Desconto: '+desc+'%';if(acr>0)msg+='
-Acréscimo: '+acr+'%';msg+='
-*💰 Total: R$ '+total.toFixed(2).replace('.',',')+'*';const tel=(document.getElementById('cli-tel').value||'').replace(/\D/g,'');window.open((tel?'https://wa.me/55'+tel:'https://wa.me/')+'?text='+encodeURIComponent(msg));}
-function printOrc(){const nome=document.getElementById('cli-nome').value||'—',tel=document.getElementById('cli-tel').value||'—';const desc=parseFloat(document.getElementById('desconto').value)||0,acr=parseFloat(document.getElementById('acrescimo').value)||0;const sub=orcamento.reduce((s,o)=>s+parseFloat(o.venda)*o.qty,0),total=sub*(1-desc/100)*(1+acr/100);const rows=orcamento.map(o=>'<tr><td>'+o.nome+'</td><td style="text-align:center">'+o.qty+'</td><td style="text-align:right">R$ '+parseFloat(o.venda).toFixed(2).replace('.',',')+'</td><td style="text-align:right">R$ '+(parseFloat(o.venda)*o.qty).toFixed(2).replace('.',',')+'</td></tr>').join('');const w=window.open('','_blank');w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Orçamento</title><style>body{font-family:sans-serif;padding:40px;font-size:14px;color:#111}h2{font-size:22px;margin-bottom:4px}.info{color:#666;font-size:12px;margin-bottom:20px}table{width:100%;border-collapse:collapse;margin:16px 0}th{background:#f5f5f5;padding:8px;text-align:left;font-weight:600;border-bottom:2px solid #eee}td{padding:8px;border-bottom:1px solid #eee}.total{font-size:17px;font-weight:bold;text-align:right;margin-top:10px}.si{text-align:right;color:#666;font-size:13px;margin-top:4px}</style></head><body><h2>Orçamento</h2><p class="info">Cliente: <strong>'+nome+'</strong> | Tel: '+tel+' | Data: '+new Date().toLocaleDateString('pt-BR')+'</p><table><thead><tr><th>Produto</th><th style="text-align:center">Qtd</th><th style="text-align:right">Unit.</th><th style="text-align:right">Subtotal</th></tr></thead><tbody>'+rows+'</tbody></table><p class="si">Subtotal: R$ '+sub.toFixed(2).replace('.',',')+'</p>'+(desc>0?'<p class="si">Desconto: '+desc+'%</p>':'')+(acr>0?'<p class="si">Acréscimo: '+acr+'%</p>':'')+'<p class="total">Total: R$ '+total.toFixed(2).replace('.',',')+'</p><scr'+'ipt>window.onload=()=>window.print()<'+'/sc'+'ript></body></html>');w.document.close();}
-function setMargem(m){document.getElementById('p-margem').value=m;calcMargem();}
-function calcMargem(){const c=parseFloat(document.getElementById('p-custo').value),m=parseFloat(document.getElementById('p-margem').value),calc=document.getElementById('preco-calc');if(c>0&&m>=1){document.getElementById('preco-sugerido').textContent='R$ '+(c*m).toFixed(2).replace('.',',');calc.style.display='block';}else calc.style.display='none';}
-function usarSugerido(){const c=parseFloat(document.getElementById('p-custo').value),m=parseFloat(document.getElementById('p-margem').value);if(c>0&&m>=1)document.getElementById('p-venda').value=(c*m).toFixed(2);}
-function handleFoto(inp){const f=inp.files[0];if(!f)return;const img=new Image(),reader=new FileReader();reader.onload=e=>{img.onload=()=>{const max=600;let w=img.width,h=img.height;if(w>max||h>max){if(w>h){h=Math.round(h*max/w);w=max;}else{w=Math.round(w*max/h);h=max;}}const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);fotoB64=canvas.toDataURL('image/jpeg',.82);const prev=document.getElementById('foto-prev');prev.src=fotoB64;prev.style.display='block';document.getElementById('foto-label').textContent='Foto selecionada ✓';};img.src=e.target.result;};reader.readAsDataURL(f);}
-function salvar(){const nome=document.getElementById('p-nome').value.trim(),venda=document.getElementById('p-venda').value,msg=document.getElementById('cad-msg');if(!nome||!venda){msg.textContent='⚠ Nome e preço de venda são obrigatórios.';msg.style.color='var(--red)';msg.style.display='block';return;}const prod={id:editId||Date.now().toString(),nome,sku:document.getElementById('p-sku').value.trim(),cat:document.getElementById('p-cat').value.trim(),custo:document.getElementById('p-custo').value,margem:document.getElementById('p-margem').value,venda,estoque:document.getElementById('p-estoque').value,peso:document.getElementById('p-peso').value,desc:document.getElementById('p-desc').value.trim(),foto:fotoB64||(editId?(products.find(p=>p.id===editId)||{}).foto:null)};if(editId){const i=products.findIndex(p=>p.id===editId);products[i]=prod;editId=null;}else products.push(prod);saveAll();updateCount();limparForm();msg.textContent='✓ Produto salvo!';msg.style.color='var(--green)';msg.style.display='block';setTimeout(()=>msg.style.display='none',2500);}
-function limparForm(){['p-nome','p-sku','p-cat','p-custo','p-margem','p-venda','p-estoque','p-peso','p-desc'].forEach(id=>document.getElementById(id).value='');document.getElementById('foto-prev').style.display='none';document.getElementById('foto-label').textContent='Clique para adicionar foto';document.getElementById('preco-calc').style.display='none';document.getElementById('foto-inp').value='';fotoB64=null;editId=null;}
-function editProd(id){const p=products.find(x=>x.id===id);if(!p)return;editId=id;go('cadastro');document.getElementById('p-nome').value=p.nome||'';document.getElementById('p-sku').value=p.sku||'';document.getElementById('p-cat').value=p.cat||'';document.getElementById('p-custo').value=p.custo||'';document.getElementById('p-margem').value=p.margem||'';document.getElementById('p-venda').value=p.venda||'';document.getElementById('p-estoque').value=p.estoque||'';document.getElementById('p-peso').value=p.peso||'';document.getElementById('p-desc').value=p.desc||'';if(p.foto){fotoB64=p.foto;const prev=document.getElementById('foto-prev');prev.src=p.foto;prev.style.display='block';document.getElementById('foto-label').textContent='Foto atual (clique para trocar)';}calcMargem();window.scrollTo(0,0);}
-function delProd(id){if(!confirm('Excluir este produto?'))return;products=products.filter(p=>p.id!==id);orcamento=orcamento.filter(o=>o.id!==id);saveAll();updateCount();delete selected[id];renderCatalogo();}
+<!-- + PRODUTO -->
+<div class="sec" id="add">
+  <div class="card">
+    <div class="ctitle">Cadastro rápido de produto</div>
+    <div class="fg">
+      <label>Foto</label>
+      <div class="uparea" id="upa" onclick="document.getElementById('upi').click()">
+        <input type="file" id="upi" accept="image/*" onchange="handleImg(this)">
+        <p id="uplbl" style="font-size:13px;color:var(--muted)">Clique para adicionar foto</p>
+        <img id="upprev" class="upimg" style="display:none">
+      </div>
+    </div>
+    <div class="fg"><label>Nome *</label><input id="pnome" placeholder="Ex: Camiseta Preta M"></div>
+    <div class="row2">
+      <div class="fg"><label>SKU</label><input id="psku" placeholder="CAM-001"></div>
+      <div class="fg"><label>Categoria</label><input id="pcat" placeholder="Roupas"></div>
+    </div>
+    <div class="fg"><label>Preço de venda (R$) *</label><input type="number" id="pvenda" placeholder="0,00" step="0.01"></div>
+    <div class="row2">
+      <div class="fg"><label>Tamanho</label><input id="ptam" placeholder="Ex: P, M, G, GG, 38, 40..."></div>
+      <div class="fg"><label>Estoque</label><input type="number" id="pstk" placeholder="0" min="0"></div>
+    </div>
+    <div class="fg"><label>Descrição</label><textarea id="pdesc" rows="2" placeholder="Detalhes..." style="resize:vertical"></textarea></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-pri" style="flex:2" onclick="saveProd()">Salvar produto</button>
+      <button class="btn btn-out" style="flex:1" onclick="clearForm()">Limpar</button>
+    </div>
+    <div class="msg" id="pmsg"></div>
+  </div>
+</div>
+</div>
+
+<script>
+var prods=[], orc=[], selqty={}, editing=null, imgb64=null, calcData={};
+
+function fmt(x){ return 'R$ '+parseFloat(x||0).toFixed(2).replace('.',','); }
+function n(id){ return parseFloat(document.getElementById(id).value)||0; }
+function v(id){ var el=document.getElementById(id); return el?el.value:''; }
+function showMsg(elId,txt,ms){ var el=document.getElementById(elId); if(!el)return; el.textContent=txt; setTimeout(function(){el.textContent='';},ms||2500); }
+
+function lsGet(k){ try{return localStorage.getItem(k);}catch(e){return null;} }
+function lsSave(k,val){ try{localStorage.setItem(k,JSON.stringify(val));}catch(e){} }
+
+function loadAll(){
+  try{ var p=lsGet('sm_prods'); if(p) prods=JSON.parse(p); }catch(e){ prods=[]; }
+  try{ var o=lsGet('sm_orc'); if(o) orc=JSON.parse(o); }catch(e){ orc=[]; }
+  document.getElementById('hdate').textContent = new Date().toLocaleDateString('pt-BR');
+  renderCat(); updateBadge();
+}
+
+function save(){ lsSave('sm_prods',prods); lsSave('sm_orc',orc); }
+
+function go(tab, btn){
+  document.querySelectorAll('.sec').forEach(function(s){ s.classList.remove('on'); });
+  document.querySelectorAll('nav button').forEach(function(b){ b.classList.remove('on'); });
+  document.getElementById(tab).classList.add('on');
+  if(btn) btn.classList.add('on');
+  if(tab==='cat') renderCat();
+  if(tab==='orc') renderOrc();
+}
+
+// ── CALCULADORA ──────────────────────────────────────────────
+function calcular(){
+  var luz   = n('c-kwh') * n('c-taxa');
+  var fil   = n('c-fil') * n('c-filg');
+  var emb   = n('c-emb');
+  var hrs   = n('c-hrs');
+  var hora  = n('c-hora');
+  var maq   = hrs * hora;
+  var custo = luz + fil + emb + maq;
+  var margem  = n('c-margem') / 100;
+  var ajuste  = n('c-ajuste') / 100;
+  var taxaP   = n('c-shopee') / 100;
+  var venda   = custo * (1 + margem) * (1 + ajuste);
+  var vShopee = taxaP < 1 ? venda / (1 - taxaP) : 0;
+  var txSh    = vShopee * taxaP;
+  var lucro   = vShopee - custo - txSh;
+  var mReal   = custo > 0 ? lucro / custo * 100 : 0;
+
+  calcData = {
+    nome:v('c-nome'), desc:v('c-desc'),
+    custo:custo, venda:venda, vShopee:vShopee, txShopee:txSh,
+    lucro:lucro, margemReal:mReal, maquina:maq,
+    kwh:n('c-kwh'), taxa_kwh:n('c-taxa'), fil:n('c-fil'), filg:n('c-filg'),
+    emb:n('c-emb'), hrs:hrs, custoHora:hora,
+    taxaShopee:n('c-shopee'), margem:n('c-margem'), ajuste:n('c-ajuste')
+  };
+
+  document.getElementById('r-maquina').value      = fmt(maq);
+  document.getElementById('r-custo').textContent  = fmt(custo);
+  document.getElementById('r-venda').textContent  = fmt(venda);
+  document.getElementById('r-lucro').textContent  = fmt(lucro);
+  document.getElementById('r-txshopee').textContent = fmt(txSh);
+  document.getElementById('r-vshopee').textContent  = fmt(vShopee);
+  document.getElementById('r-margem').textContent   = mReal.toFixed(1)+'%';
+
+  var resumo = document.getElementById('r-resumo');
+  if(custo > 0){
+    resumo.style.display='block';
+    var fmin = Math.ceil(vShopee*0.95), fmax = Math.ceil(vShopee*1.10);
+    resumo.innerHTML =
+      '<strong style="color:var(--orange)">Resumo rápido</strong><br>'+
+      (maq>0 ? '🔧 Máquina: '+hrs+'h × R$ '+hora.toFixed(2)+' = <strong>'+fmt(maq)+'</strong><br>' : '')+
+      '💰 Custo real: <strong>'+fmt(custo)+'</strong><br>'+
+      '🏷️ Preço Shopee: <strong>'+fmt(vShopee)+'</strong> (faixa R$'+fmin+' ~ R$'+fmax+')';
+  } else {
+    resumo.style.display='none';
+  }
+}
+
+function salvarCalc(){
+  var nome = v('c-nome').trim();
+  if(!nome){ showMsg('calc-msg','Informe o nome do produto.'); return; }
+  var p = {id:Date.now().toString(), foto:null, venda_cat:calcData.vShopee};
+  var keys = Object.keys(calcData);
+  for(var i=0;i<keys.length;i++) p[keys[i]] = calcData[keys[i]];
+  p.nome = nome;
+  var idx = -1;
+  for(var i=0;i<prods.length;i++) if(prods[i].nome===nome){idx=i;break;}
+  if(idx>=0) prods[idx]=p; else prods.push(p);
+  save();
+  showMsg('calc-msg','✓ Salvo no catálogo!');
+}
+
+function copiarPreco(){
+  var d = calcData;
+  var nome = v('c-nome')||'Produto';
+  var txt = nome+'\nPreço direto: '+fmt(d.venda)+'\nShopee: '+fmt(d.vShopee)+'\nFeito sob encomenda!';
+  if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ showMsg('calc-msg','✓ Copiado!'); }); }
+}
+
+function gerarPDF(titulo, linhas, rodape){
+  var jsPDF = window.jspdf ? window.jspdf.jsPDF : null;
+  if(!jsPDF){ alert('Biblioteca PDF ainda carregando. Tente novamente em segundos.'); return; }
+  var doc = new jsPDF({unit:'mm',format:'a4'});
+  var W=210, M=18, cW=W-M*2;
+  var orange=[228,103,10], dark=[26,26,26], gray=[100,100,100], lightgray=[245,244,242];
+  var y=18;
+
+  // Cabeçalho laranja
+  doc.setFillColor(orange[0],orange[1],orange[2]);
+  doc.rect(0,0,W,28,'F');
+  doc.setFontSize(16); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+  doc.text('Shopee Manager',M,13);
+  doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.text(titulo, M, 21);
+  doc.setFontSize(8); doc.setTextColor(255,220,180);
+  doc.text('Data: '+new Date().toLocaleDateString('pt-BR'), W-M, 21, {align:'right'});
+  y=38;
+
+  // Linhas de conteúdo
+  for(var i=0;i<linhas.length;i++){
+    var l=linhas[i];
+    if(l.type==='title'){
+      doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(dark[0],dark[1],dark[2]);
+      doc.text(l.text, M, y); y+=8;
+    } else if(l.type==='box'){
+      doc.setFillColor(orange[0],orange[1],orange[2]);
+      doc.roundedRect(M,y,cW,20,3,3,'F');
+      doc.setFontSize(8); doc.setTextColor(255,220,180); doc.setFont('helvetica','normal');
+      doc.text(l.label1||'', M+6, y+7);
+      doc.setFontSize(16); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+      doc.text(l.val1||'', M+6, y+16);
+      if(l.label2){
+        doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(255,220,180);
+        doc.text(l.label2, cW*0.55+M, y+7);
+        doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+        doc.text(l.val2||'', cW*0.55+M, y+16);
+      }
+      y+=28;
+    } else if(l.type==='table'){
+      var headers=l.headers, rows=l.rows;
+      var colW=cW/headers.length;
+      // Header
+      doc.setFillColor(lightgray[0],lightgray[1],lightgray[2]);
+      doc.rect(M,y,cW,8,'F');
+      doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(gray[0],gray[1],gray[2]);
+      for(var h=0;h<headers.length;h++){
+        var hx = h===0 ? M+3 : M+colW*h+(h===headers.length-1?colW-3:colW/2);
+        var align = h===0?'left':(h===headers.length-1?'right':'center');
+        doc.text(headers[h], hx, y+5.5, {align:align});
+      }
+      y+=10;
+      // Rows
+      doc.setFont('helvetica','normal'); doc.setTextColor(dark[0],dark[1],dark[2]);
+      for(var r=0;r<rows.length;r++){
+        if(y>270){ doc.addPage(); y=20; }
+        if(r%2===0){ doc.setFillColor(250,249,248); doc.rect(M,y-3,cW,8,'F'); }
+        doc.setFontSize(9);
+        for(var c=0;c<rows[r].length;c++){
+          var cx = c===0 ? M+3 : M+colW*c+(c===rows[r].length-1?colW-3:colW/2);
+          var ca = c===0?'left':(c===rows[r].length-1?'right':'center');
+          doc.text(String(rows[r][c]), cx, y+2.5, {align:ca});
+        }
+        y+=8;
+        doc.setDrawColor(230,228,224); doc.setLineWidth(0.2);
+        doc.line(M,y-2,W-M,y-2);
+      }
+      y+=6;
+    } else if(l.type==='row'){
+      doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(gray[0],gray[1],gray[2]);
+      doc.text(l.label, M, y);
+      doc.setFont('helvetica','bold'); doc.setTextColor(dark[0],dark[1],dark[2]);
+      doc.text(l.val, W-M, y, {align:'right'});
+      y+=7;
+    } else if(l.type==='divider'){
+      doc.setDrawColor(orange[0],orange[1],orange[2]); doc.setLineWidth(0.5);
+      doc.line(M,y,W-M,y); y+=8;
+    } else if(l.type==='total'){
+      doc.setFillColor(orange[0],orange[1],orange[2]);
+      doc.roundedRect(M,y,cW,12,2,2,'F');
+      doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+      doc.text('Total', M+6, y+8);
+      doc.text(l.val, W-M-6, y+8, {align:'right'});
+      y+=18;
+    }
+  }
+
+  // Rodapé
+  if(rodape){
+    doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(gray[0],gray[1],gray[2]);
+    doc.text(rodape, W/2, 285, {align:'center'});
+  }
+
+  doc.save(titulo.replace(/[^a-z0-9]/gi,'_')+'.pdf');
+}
+
+function imprimirCalc(){
+  var d = calcData;
+  if(!d.custo && !d.vShopee){ showMsg('calc-msg','Preencha os dados primeiro.'); return; }
+  var nome = d.nome || 'Produto';
+  gerarPDF(
+    'Orçamento — '+nome,
+    [
+      {type:'box', label1:'Pagamento direto', val1:fmt(d.venda), label2:'Via Shopee / marketplace', val2:fmt(d.vShopee)},
+      {type:'title', text:'Detalhamento de custos'},
+      {type:'table',
+        headers:['Item','Valor'],
+        rows:[
+          ['Luz (kWh)', fmt(d.kwh * d.taxa_kwh)],
+          ['Filamento', fmt(d.fil * d.filg)],
+          ['Embalagem', fmt(d.emb)],
+          ['Máquina ('+d.hrs+'h × R$'+d.custoHora.toFixed(2)+')', fmt(d.maquina)],
+          ['Custo total', fmt(d.custo)],
+          ['Taxa Shopee ('+d.taxaShopee+'%)', fmt(d.txShopee)],
+          ['Lucro estimado', fmt(d.lucro)],
+          ['Margem real', d.margemReal.toFixed(1)+'%'],
+        ]
+      }
+    ],
+    'Gerado por Shopee Manager'
+  );
+}
+
+// ── CATÁLOGO ─────────────────────────────────────────────────
+function renderCat(){
+  var q=(document.getElementById('srch').value||'').toLowerCase();
+  var f=prods.filter(function(p){
+    return (p.nome||'').toLowerCase().indexOf(q)>=0||
+           (p.sku||'').toLowerCase().indexOf(q)>=0||
+           (p.cat||'').toLowerCase().indexOf(q)>=0;
+  });
+  var grid=document.getElementById('pgrid');
+  var empty=document.getElementById('cempty');
+  if(!f.length){grid.innerHTML='';empty.style.display='block';updateSelbar();return;}
+  empty.style.display='none';
+  var html='';
+  for(var i=0;i<f.length;i++){
+    var p=f[i];
+    var qty=selqty[p.id]||0;
+    var priceVal=parseFloat(p.venda_cat||p.vShopee||p.venda||0);
+    var imgHtml=p.foto?'<img src="'+p.foto+'" alt="">':'📦';
+    html+='<div class="pcard'+(qty>0?' sel':'')+'">'+
+      '<div class="pcard-img">'+imgHtml+'</div>'+
+      '<div class="pcard-name">'+p.nome+'</div>'+
+      (p.sku||p.tam?'<div style="font-size:10px;color:var(--muted)">'+(p.sku||'')+(p.sku&&p.tam?' · ':'')+( p.tam?'Tam: '+p.tam:'')+'</div>':'')+
+      '<div class="pcard-price">'+fmt(priceVal)+'</div>'+
+      '<div class="qrow">'+
+        '<button onclick="chgsel(\''+p.id+'\',-1)">−</button>'+
+        '<span>'+qty+'</span>'+
+        '<button onclick="chgsel(\''+p.id+'\',1)">+</button>'+
+      '</div>'+
+      '<div class="cact">'+
+        '<button class="btn-sm" style="flex:1;font-size:11px" onclick="editProd(\''+p.id+'\')">Editar</button>'+
+        '<button class="btn-sm btn-danger" style="font-size:11px;padding:5px 8px" onclick="delProd(\''+p.id+'\')">✕</button>'+
+      '</div>'+
+    '</div>';
+  }
+  grid.innerHTML=html;
+  updateSelbar();
+}
+
+function chgsel(id,d){
+  selqty[id]=(selqty[id]||0)+d;
+  if(selqty[id]<0)selqty[id]=0;
+  if(selqty[id]===0)delete selqty[id];
+  renderCat();
+}
+
+function updateSelbar(){
+  var total=0,items=0;
+  var keys=Object.keys(selqty);
+  for(var i=0;i<keys.length;i++){if(selqty[keys[i]]>0){total+=selqty[keys[i]];items++;}}
+  var bar=document.getElementById('selbar');
+  if(total>0){bar.style.display='flex';document.getElementById('seltxt').textContent=items+' produto(s) — '+total+' un.';}
+  else bar.style.display='none';
+}
+
+function clearSel(){selqty={};document.getElementById('srch').value='';renderCat();}
+
+function addToOrc(){
+  var keys=Object.keys(selqty);
+  for(var i=0;i<keys.length;i++){
+    var id=keys[i],qty=selqty[id];
+    if(!qty)continue;
+    var p=null;for(var j=0;j<prods.length;j++)if(prods[j].id===id){p=prods[j];break;}
+    if(!p)continue;
+    var priceVal=parseFloat(p.venda_cat||p.vShopee||p.venda||0);
+    var found=null;for(var k=0;k<orc.length;k++)if(orc[k].id===id){found=orc[k];break;}
+    if(found)found.qty+=qty;
+    else orc.push({id:p.id,nome:p.nome,preco:priceVal,foto:p.foto||null,qty:qty});
+  }
+  selqty={};save();updateBadge();
+  go('orc',document.querySelectorAll('nav button')[2]);
+}
+
+function updateBadge(){
+  var b=document.getElementById('obadge'),total=0;
+  for(var i=0;i<orc.length;i++)total+=orc[i].qty;
+  if(total>0){b.style.display='inline';b.textContent=total;}else b.style.display='none';
+}
+
+// ── ORÇAMENTO ────────────────────────────────────────────────
+function renderOrc(){
+  var list=document.getElementById('olitems');
+  var empty=document.getElementById('oempty');
+  var summ=document.getElementById('osumm');
+  if(!orc.length){list.innerHTML='';empty.style.display='block';summ.style.display='none';return;}
+  empty.style.display='none';summ.style.display='block';
+  var html='';
+  for(var i=0;i<orc.length;i++){
+    var o=orc[i];
+    var sub=(parseFloat(o.preco)*o.qty).toFixed(2).replace('.',',');
+    var imgHtml=o.foto?'<img src="'+o.foto+'" alt="">':'📦';
+    html+='<div class="oitem">'+
+      '<div class="othumb">'+imgHtml+'</div>'+
+      '<div class="oinfo"><div class="oname">'+o.nome+'</div><div class="oprice">'+fmt(o.preco)+' / un</div></div>'+
+      '<div class="oqrow"><button onclick="chgorc('+i+',-1)">−</button><span>'+o.qty+'</span><button onclick="chgorc('+i+',1)">+</button></div>'+
+      '<div class="osub">R$ '+sub+'</div>'+
+      '<button class="btn-sm btn-danger" style="padding:4px 7px;font-size:11px" onclick="rmorc('+i+')">✕</button>'+
+    '</div>';
+  }
+  list.innerHTML=html;
+  calcTotal();
+}
+
+function chgorc(i,d){orc[i].qty+=d;if(orc[i].qty<=0)orc.splice(i,1);save();updateBadge();renderOrc();}
+function rmorc(i){orc.splice(i,1);save();updateBadge();renderOrc();}
+
+function calcTotal(){
+  var sub=0;for(var i=0;i<orc.length;i++)sub+=parseFloat(orc[i].preco)*orc[i].qty;
+  var desc=parseFloat(document.getElementById('odesc').value)||0;
+  var acr=parseFloat(document.getElementById('oacr').value)||0;
+  var total=sub*(1-desc/100)*(1+acr/100);
+  document.getElementById('osub').textContent=fmt(sub);
+  document.getElementById('ototal').textContent=fmt(total);
+}
+
+function clearOrc(){
+  if(!confirm('Limpar orçamento?'))return;
+  orc=[];save();updateBadge();
+  document.getElementById('olitems').innerHTML='';
+  document.getElementById('oempty').style.display='block';
+  document.getElementById('osumm').style.display='none';
+  document.getElementById('cnome').value='';
+  document.getElementById('ctel').value='';
+  document.getElementById('odesc').value='0';
+  document.getElementById('oacr').value='0';
+}
+
+function sendWA(){
+  var nome=v('cnome')||'Cliente';
+  var tel=v('ctel').replace(/\D/g,'');
+  var desc=parseFloat(document.getElementById('odesc').value)||0;
+  var acr=parseFloat(document.getElementById('oacr').value)||0;
+  var sub=0;for(var i=0;i<orc.length;i++)sub+=parseFloat(orc[i].preco)*orc[i].qty;
+  var total=sub*(1-desc/100)*(1+acr/100);
+  var msg='*Orçamento — '+nome+'*\n📅 '+new Date().toLocaleDateString('pt-BR')+'\n\n';
+  for(var i=0;i<orc.length;i++){
+    var o=orc[i];
+    msg+='• '+o.nome+' x'+o.qty+' = R$ '+(parseFloat(o.preco)*o.qty).toFixed(2).replace('.',',')+'\n';
+  }
+  msg+='\nSubtotal: '+fmt(sub);
+  if(desc>0)msg+='\nDesconto: '+desc+'%';
+  if(acr>0)msg+='\nAcréscimo: '+acr+'%';
+  msg+='\n*💰 Total: '+fmt(total)+'*';
+  window.open((tel?'https://wa.me/55'+tel:'https://wa.me/')+'?text='+encodeURIComponent(msg));
+}
+
+function printOrc(){
+  var nome=v('cnome')||'Cliente';
+  var tel=v('ctel')||'';
+  var desc=parseFloat(document.getElementById('odesc').value)||0;
+  var acr=parseFloat(document.getElementById('oacr').value)||0;
+  var sub=0;
+  for(var i=0;i<orc.length;i++) sub+=parseFloat(orc[i].preco)*orc[i].qty;
+  var total=sub*(1-desc/100)*(1+acr/100);
+
+  var tableRows=[];
+  for(var i=0;i<orc.length;i++){
+    var o=orc[i];
+    tableRows.push([
+      o.nome,
+      String(o.qty),
+      fmt(o.preco),
+      'R$ '+(parseFloat(o.preco)*o.qty).toFixed(2).replace('.',',')
+    ]);
+  }
+
+  var linhas=[
+    {type:'title', text:'Cliente: '+nome+(tel?' | '+tel:'')},
+  ];
+  linhas.push({type:'table', headers:['Produto','Qtd','Unit.','Subtotal'], rows:tableRows});
+  if(desc>0) linhas.push({type:'row', label:'Desconto ('+desc+'%)', val:'-'+fmt(sub*desc/100)});
+  if(acr>0)  linhas.push({type:'row', label:'Acréscimo ('+acr+'%)', val:'+'+fmt(sub*(1-desc/100)*acr/100)});
+  linhas.push({type:'total', val:fmt(total)});
+
+  gerarPDF('Orcamento_'+nome.replace(/\s+/g,'_'), linhas, 'Gerado por Shopee Manager');
+}
+
+// ── + PRODUTO SIMPLES ─────────────────────────────────────────
+function handleImg(inp){
+  var file=inp.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var max=500,w=img.width,h=img.height;
+      if(w>max||h>max){if(w>h){h=Math.round(h*max/w);w=max;}else{w=Math.round(w*max/h);h=max;}}
+      var c=document.createElement('canvas');c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      imgb64=c.toDataURL('image/jpeg',0.8);
+      var prev=document.getElementById('upprev');
+      prev.src=imgb64;prev.style.display='block';
+      document.getElementById('uplbl').textContent='Foto selecionada ✓';
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveProd(){
+  var nome=(document.getElementById('pnome').value||'').trim();
+  var venda=parseFloat(document.getElementById('pvenda').value)||0;
+  if(!nome||venda<=0){showMsg('pmsg','Nome e preço são obrigatórios');return;}
+  var oldFoto=editing?(function(){for(var i=0;i<prods.length;i++)if(prods[i].id===editing)return prods[i].foto||null;return null;})():null;
+  var prod={
+    id:editing||Date.now().toString(),
+    nome:nome,sku:(document.getElementById('psku').value||'').trim(),
+    cat:(document.getElementById('pcat').value||'').trim(),
+    tam:(document.getElementById('ptam').value||'').trim(),
+    venda_cat:venda,stk:parseInt(document.getElementById('pstk').value)||0,
+    desc:(document.getElementById('pdesc').value||'').trim(),
+    foto:imgb64||oldFoto||null
+  };
+  if(editing){for(var i=0;i<prods.length;i++)if(prods[i].id===editing){prods[i]=prod;break;}editing=null;}
+  else prods.push(prod);
+  save();clearForm();showMsg('pmsg','✓ Produto salvo!');
+}
+
+function clearForm(){
+  ['pnome','psku','pcat','ptam','pvenda','pstk','pdesc'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('upprev').style.display='none';
+  document.getElementById('uplbl').textContent='Clique para adicionar foto';
+  document.getElementById('upi').value='';
+  imgb64=null;editing=null;
+}
+
+function editProd(id){
+  var p=null;for(var i=0;i<prods.length;i++)if(prods[i].id===id){p=prods[i];break;}
+  if(!p)return;
+  editing=id;
+  if(p.custo){
+    // Produto da calculadora
+    document.getElementById('c-nome').value=p.nome||'';
+    document.getElementById('c-desc').value=p.desc||'';
+    document.getElementById('c-kwh').value=p.kwh||1;
+    document.getElementById('c-taxa').value=p.taxa_kwh||0.185;
+    document.getElementById('c-fil').value=p.fil||100;
+    document.getElementById('c-filg').value=p.filg||0.35;
+    document.getElementById('c-emb').value=p.emb||1.75;
+    document.getElementById('c-hrs').value=p.hrs||2;
+    document.getElementById('c-hora').value=p.custoHora||2;
+    document.getElementById('c-shopee').value=p.taxaShopee||20;
+    document.getElementById('c-margem').value=p.margem||150;
+    document.getElementById('c-ajuste').value=p.ajuste||0;
+    calcular();
+    go('calc',document.querySelectorAll('nav button')[0]);
+  } else {
+    document.getElementById('pnome').value=p.nome||'';
+    document.getElementById('psku').value=p.sku||'';
+    document.getElementById('pcat').value=p.cat||'';
+    document.getElementById('ptam').value=p.tam||'';
+    document.getElementById('pvenda').value=p.venda_cat||'';
+    document.getElementById('pstk').value=p.stk||'';
+    document.getElementById('pdesc').value=p.desc||'';
+    if(p.foto){imgb64=p.foto;var prev=document.getElementById('upprev');prev.src=p.foto;prev.style.display='block';document.getElementById('uplbl').textContent='Foto atual ✓';}
+    go('add',document.querySelectorAll('nav button')[3]);
+  }
+}
+
+function delProd(id){
+  if(!confirm('Excluir produto?'))return;
+  prods=prods.filter(function(p){return p.id!==id;});
+  orc=orc.filter(function(o){return o.id!==id;});
+  delete selqty[id];save();renderCat();
+}
+
 loadAll();
+calcular();
 </script>
 </body>
 </html>
