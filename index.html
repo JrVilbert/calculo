@@ -361,6 +361,7 @@ function loadAll(){
       .then(function(data){
         if(data.products){
           prods = data.products.map(function(p){
+            p.id = String(p.id||'');
             p.venda_cat = parseFloat(p.venda)||0;
             p.foto = p.foto||null;
             return p;
