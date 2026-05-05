@@ -196,6 +196,62 @@ nav button.on{color:var(--orange);border-bottom-color:var(--orange)}
 
 <!-- + PRODUTO -->
 <div class="sec" id="add">
+
+  <!-- AGENTE CLAUDE IA -->
+  <div class="card" style="margin-bottom:12px;border:1.5px solid var(--orange);background:var(--orange-light)">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span style="font-size:20px">🤖</span>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--orange)">Cadastrar com IA</div>
+        <div style="font-size:11px;color:var(--muted)">Descreva o produto em linguagem natural</div>
+      </div>
+    </div>
+    <div style="position:relative;margin-bottom:8px">
+      <textarea id="agent-input" rows="2" placeholder='Ex: "Adicione Six Seven, 40g de filamento, 4 horas de impressão, embalagem 2 reais" ou "Produto: Chaveiro Gato, custo 5 reais, margem 3x"' style="width:100%;padding:10px 44px 10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--card);color:var(--text);resize:none;line-height:1.4"></textarea>
+      <button onclick="enviarAgente()" id="agent-btn" style="position:absolute;right:8px;bottom:8px;width:32px;height:32px;background:var(--orange);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff">➤</button>
+    </div>
+    <div id="agent-thinking" style="display:none;font-size:12px;color:var(--muted);padding:6px 0">
+      <span id="agent-dots">⏳ Interpretando sua mensagem...</span>
+    </div>
+    <div id="agent-preview" style="display:none">
+      <div style="background:var(--card);border-radius:var(--radius-sm);border:1px solid var(--border);padding:12px;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Preview do produto interpretado</div>
+        <div id="agent-fields" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px"></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-style:italic" id="agent-obs"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-pri" style="flex:2" onclick="confirmarAgente()">✓ Confirmar e salvar</button>
+        <button class="btn btn-out" style="flex:1" onclick="editarAgente()">✏ Editar</button>
+        <button class="btn btn-out btn-danger" style="flex:1" onclick="cancelarAgente()">✕</button>
+      </div>
+    </div>
+    <div id="agent-history" style="margin-top:8px;max-height:120px;overflow-y:auto"></div>
+    <div class="msg" id="agent-msg"></div>
+  </div>
+
+  <!-- IMPORTAÇÃO EM MASSA -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="ctitle">Importar vários produtos de uma vez</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Importe um arquivo CSV ou Excel com vários produtos. Baixe o modelo para preencher corretamente.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <button class="btn-sm" onclick="baixarModelo()" style="background:var(--green-bg);color:var(--green);border-color:#86efac">⬇ Baixar modelo CSV</button>
+      <button class="btn-sm" onclick="document.getElementById('import-inp').click()" style="background:var(--blue-bg,#eff6ff);color:#2563eb;border-color:#93c5fd">📂 Importar CSV / Excel</button>
+      <input type="file" id="import-inp" accept=".csv,.xlsx,.xls" style="display:none" onchange="importarArquivo(this)">
+    </div>
+    <div id="import-preview" style="display:none">
+      <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px" id="import-info"></div>
+      <div style="overflow-x:auto;margin-bottom:10px">
+        <table id="import-table" style="width:100%;border-collapse:collapse;font-size:12px;background:var(--card);border-radius:var(--radius)">
+        </table>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-pri" style="flex:2" onclick="confirmarImport()">✓ Importar todos</button>
+        <button class="btn btn-out" style="flex:1" onclick="cancelarImport()">Cancelar</button>
+      </div>
+    </div>
+    <div class="msg" id="import-msg"></div>
+  </div>
+
   <div class="card">
     <div class="ctitle">Cadastro rápido de produto</div>
     <div class="fg">
@@ -223,7 +279,8 @@ nav button.on{color:var(--orange);border-bottom-color:var(--orange)}
     </div>
     <div class="msg" id="pmsg"></div>
   </div>
-</div>
+</div><!-- fim card cadastro -->
+</div><!-- fim sec add -->
 
 <!-- VENDAS -->
 <div class="sec" id="vendas">
@@ -1286,6 +1343,365 @@ function printOrc(){
   if(cfg.obs) linhas.push({type:'obs', text:cfg.obs});
 
   gerarPDF('Orçamento — '+nome, linhas, 'Orcamento_'+nome.replace(/\s+/g,'_'));
+}
+
+// ── AGENTE CLAUDE IA ──────────────────────────────────────────
+var agenteProduto = null;
+var agenteHistorico = [];
+
+function enviarAgente(){
+  var msg = (document.getElementById('agent-input').value||'').trim();
+  if(!msg){ return; }
+
+  // Pega configurações atuais da calculadora para contexto
+  var ctxKwh   = document.getElementById('c-taxa') ? document.getElementById('c-taxa').value : '0.185';
+  var ctxFilg  = document.getElementById('c-filg') ? document.getElementById('c-filg').value : '0.10';
+  var ctxHora  = document.getElementById('c-hora') ? document.getElementById('c-hora').value : '1';
+  var ctxShopee= document.getElementById('c-shopee') ? document.getElementById('c-shopee').value : '20';
+  var ctxMargem= document.getElementById('c-margem') ? document.getElementById('c-margem').value : '150';
+
+  document.getElementById('agent-thinking').style.display = 'block';
+  document.getElementById('agent-preview').style.display  = 'none';
+  document.getElementById('agent-btn').disabled = true;
+
+  var systemPrompt = `Você é um assistente de cadastro de produtos para uma loja de impressão 3D.
+Quando o usuário descrever um produto, extraia os dados e retorne SOMENTE um JSON válido, sem texto extra, sem blocos de código.
+
+Configurações atuais da calculadora:
+- Taxa de luz: R$ ${ctxKwh}/kWh
+- Custo filamento: R$ ${ctxFilg}/g
+- Custo/hora máquina: R$ ${ctxHora}
+- Taxa Shopee: ${ctxShopee}%
+- Margem de lucro: ${ctxMargem}%
+
+Se o usuário informar dados de custo (filamento, horas, energia), calcule o custo total e o preço de venda usando a fórmula:
+custo = (kWh × ${ctxKwh}) + (gramas × ${ctxFilg}) + embalagem + (horas × ${ctxHora})
+venda_direta = custo × (1 + ${ctxMargem}/100)
+
+Retorne este JSON:
+{
+  "nome": "nome do produto",
+  "sku": "código se mencionado ou vazio",
+  "cat": "categoria se mencionada",
+  "tam": "tamanho se mencionado",
+  "venda": preço de venda como número,
+  "stk": estoque como número (0 se não mencionado),
+  "desc": "descrição breve",
+  "custo_calc": custo calculado como número,
+  "kwh": kWh usado,
+  "fil": gramas de filamento,
+  "emb": custo embalagem,
+  "hrs": horas de impressão,
+  "obs": "observação sobre o que foi assumido/calculado"
+}`;
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: msg }]
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    document.getElementById('agent-thinking').style.display = 'none';
+    document.getElementById('agent-btn').disabled = false;
+
+    var texto = '';
+    if(data.content && data.content[0] && data.content[0].text){
+      texto = data.content[0].text.trim();
+    }
+
+    // Remove possíveis blocos de código
+    texto = texto.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+
+    var parsed = null;
+    try { parsed = JSON.parse(texto); } catch(e){
+      showMsg('agent-msg','Não consegui interpretar. Tente descrever de forma mais clara.');
+      return;
+    }
+
+    agenteProduto = {
+      id: Date.now().toString(),
+      nome: parsed.nome||'',
+      sku:  parsed.sku||'',
+      cat:  parsed.cat||'',
+      tam:  parsed.tam||'',
+      venda_cat: parseFloat(parsed.venda)||0,
+      stk:  parseInt(parsed.stk)||0,
+      desc: parsed.desc||'',
+      foto: null,
+      // dados calculadora
+      custo: parsed.custo_calc||0,
+      kwh: parsed.kwh||0, taxa_kwh: parseFloat(ctxKwh),
+      fil: parsed.fil||0, filg: parseFloat(ctxFilg),
+      emb: parsed.emb||0, hrs: parsed.hrs||0, custoHora: parseFloat(ctxHora),
+      taxaShopee: parseFloat(ctxShopee), margem: parseFloat(ctxMargem), ajuste: 0,
+      vShopee: parsed.custo_calc ? parseFloat(parsed.venda)/(1-parseFloat(ctxShopee)/100) : 0,
+      margemReal: parsed.custo_calc ? ((parseFloat(parsed.venda) - parsed.custo_calc) / parsed.custo_calc * 100) : 0
+    };
+
+    // Monta preview
+    var fields = [
+      ['Nome', agenteProduto.nome],
+      ['Preço venda direta', 'R$ '+agenteProduto.venda_cat.toFixed(2).replace('.',',')],
+      ['Custo calculado', agenteProduto.custo ? 'R$ '+agenteProduto.custo.toFixed(2).replace('.',',') : '—'],
+      ['Categoria', agenteProduto.cat||'—'],
+      ['SKU', agenteProduto.sku||'—'],
+      ['Tamanho', agenteProduto.tam||'—'],
+      ['Estoque', agenteProduto.stk],
+      ['Descrição', agenteProduto.desc||'—'],
+    ];
+
+    document.getElementById('agent-fields').innerHTML = fields.map(function(f){
+      return '<div style="background:var(--bg2,#f5f5f5);border-radius:4px;padding:6px 8px">'+
+        '<div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase">'+f[0]+'</div>'+
+        '<div style="font-size:13px;font-weight:500;margin-top:2px">'+f[1]+'</div>'+
+      '</div>';
+    }).join('');
+
+    document.getElementById('agent-obs').textContent = parsed.obs ? '💡 '+parsed.obs : '';
+    document.getElementById('agent-preview').style.display = 'block';
+
+    // Histórico
+    agenteHistorico.push({msg: msg, nome: agenteProduto.nome});
+    renderAgenteHistorico();
+    document.getElementById('agent-input').value = '';
+  })
+  .catch(function(e){
+    document.getElementById('agent-thinking').style.display = 'none';
+    document.getElementById('agent-btn').disabled = false;
+    showMsg('agent-msg','Erro ao conectar com a IA. Verifique sua conexão.');
+  });
+}
+
+function renderAgenteHistorico(){
+  var cont = document.getElementById('agent-history');
+  if(!agenteHistorico.length){ cont.innerHTML=''; return; }
+  var html = '<div style="font-size:11px;color:var(--muted);margin-bottom:4px">Comandos recentes:</div>';
+  agenteHistorico.slice(-3).reverse().forEach(function(h){
+    html += '<div style="font-size:11px;color:var(--muted);padding:3px 0;border-bottom:0.5px solid var(--border)">'+
+      '→ "'+h.msg.slice(0,50)+(h.msg.length>50?'...':'')+'" <span style="color:var(--green)">✓ '+h.nome+'</span></div>';
+  });
+  cont.innerHTML = html;
+}
+
+function confirmarAgente(){
+  if(!agenteProduto){ return; }
+  var p = agenteProduto;
+  var existe = prods.findIndex(function(x){ return x.nome === p.nome; });
+  if(existe >= 0) prods[existe] = p; else prods.push(p);
+  syncProd(p);
+  showMsg('agent-msg','✓ "'+p.nome+'" salvo no catálogo!');
+  document.getElementById('agent-preview').style.display = 'none';
+  agenteProduto = null;
+  renderCat();
+  updateVendaSelect();
+}
+
+function editarAgente(){
+  if(!agenteProduto){ return; }
+  var p = agenteProduto;
+  // Preenche o formulário manual com os dados interpretados
+  document.getElementById('pnome').value  = p.nome||'';
+  document.getElementById('psku').value   = p.sku||'';
+  document.getElementById('pcat').value   = p.cat||'';
+  document.getElementById('ptam').value   = p.tam||'';
+  document.getElementById('pvenda').value = p.venda_cat||'';
+  document.getElementById('pstk').value   = p.stk||'';
+  document.getElementById('pdesc').value  = p.desc||'';
+  document.getElementById('agent-preview').style.display = 'none';
+  agenteProduto = null;
+  // Scroll para o formulário
+  document.getElementById('pnome').scrollIntoView({behavior:'smooth'});
+  document.getElementById('pnome').focus();
+}
+
+function cancelarAgente(){
+  agenteProduto = null;
+  document.getElementById('agent-preview').style.display = 'none';
+  document.getElementById('agent-input').value = '';
+}
+
+// Enter envia agente
+document.addEventListener('DOMContentLoaded', function(){
+  var inp = document.getElementById('agent-input');
+  if(inp){
+    inp.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); enviarAgente(); }
+    });
+  }
+});
+
+
+var importBuffer = [];
+
+function baixarModelo(){
+  var csv = 'nome,sku,cat,tam,venda,stk,desc\n';
+  csv += 'Camiseta Preta P,CAM-001,Roupas,P,49.90,10,100% algodão\n';
+  csv += 'Camiseta Preta M,CAM-002,Roupas,M,49.90,10,100% algodão\n';
+  csv += 'Chaveiro Personalizado,CHA-001,Acessórios,,15.00,50,Impressão 3D\n';
+  var blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'modelo_produtos.csv';
+  a.click();
+}
+
+function importarArquivo(inp){
+  var file = inp.files[0];
+  if(!file){ return; }
+  var ext = file.name.split('.').pop().toLowerCase();
+
+  if(ext === 'csv'){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var txt = e.target.result;
+      // Remove BOM se houver
+      txt = txt.replace(/^\uFEFF/,'');
+      processarCSV(txt);
+    };
+    reader.readAsText(file, 'UTF-8');
+  } else if(ext === 'xlsx' || ext === 'xls'){
+    // Usa SheetJS via CDN se disponível
+    if(typeof XLSX === 'undefined'){
+      var script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      script.onload = function(){ lerExcel(file); };
+      document.head.appendChild(script);
+    } else {
+      lerExcel(file);
+    }
+  }
+  inp.value = '';
+}
+
+function lerExcel(file){
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var wb = XLSX.read(e.target.result, {type:'array'});
+    var ws = wb.Sheets[wb.SheetNames[0]];
+    var csv = XLSX.utils.sheet_to_csv(ws);
+    processarCSV(csv);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function processarCSV(txt){
+  var linhas = txt.trim().split(/\r?\n/);
+  if(linhas.length < 2){ showMsg('import-msg','Arquivo vazio ou sem dados.'); return; }
+
+  var headers = linhas[0].split(',').map(function(h){ return h.trim().toLowerCase().replace(/["""]/g,''); });
+  var campos = ['nome','sku','cat','tam','venda','stk','desc'];
+
+  // Valida se tem coluna nome e venda
+  if(headers.indexOf('nome') < 0 || headers.indexOf('venda') < 0){
+    showMsg('import-msg','O arquivo precisa ter colunas: nome e venda. Baixe o modelo para ver o formato correto.');
+    return;
+  }
+
+  importBuffer = [];
+  for(var i = 1; i < linhas.length; i++){
+    if(!linhas[i].trim()) continue;
+    var cols = linhas[i].split(',');
+    var obj = {};
+    headers.forEach(function(h, idx){
+      obj[h] = (cols[idx]||'').trim().replace(/^[""]|[""]$/g,'');
+    });
+    if(!obj.nome) continue;
+    importBuffer.push({
+      id: Date.now().toString() + i,
+      nome: obj.nome||'',
+      sku:  obj.sku||'',
+      cat:  obj.cat||obj.categoria||'',
+      tam:  obj.tam||obj.tamanho||'',
+      venda_cat: parseFloat((obj.venda||'0').replace(',','.')) || 0,
+      stk:  parseInt(obj.stk||obj.estoque||'0') || 0,
+      desc: obj.desc||obj.descricao||obj['descrição']||'',
+      foto: null
+    });
+  }
+
+  if(!importBuffer.length){ showMsg('import-msg','Nenhum produto válido encontrado.'); return; }
+
+  // Mostra preview
+  var preview = document.getElementById('import-preview');
+  var info = document.getElementById('import-info');
+  var table = document.getElementById('import-table');
+  info.textContent = importBuffer.length + ' produto(s) encontrado(s) para importar';
+
+  var html = '<thead><tr style="background:var(--orange);color:#fff">';
+  ['Nome','SKU','Categoria','Tamanho','Preço','Estoque','Descrição'].forEach(function(h){
+    html += '<th style="padding:6px 8px;text-align:left;white-space:nowrap;font-size:11px">'+h+'</th>';
+  });
+  html += '</tr></thead><tbody>';
+  importBuffer.forEach(function(p, i){
+    html += '<tr style="'+(i%2===0?'background:var(--bg2,#f5f5f5)':'')+'">'+
+      '<td style="padding:5px 8px;font-size:12px">'+p.nome+'</td>'+
+      '<td style="padding:5px 8px;font-size:12px;color:var(--muted)">'+p.sku+'</td>'+
+      '<td style="padding:5px 8px;font-size:12px;color:var(--muted)">'+p.cat+'</td>'+
+      '<td style="padding:5px 8px;font-size:12px;color:var(--muted)">'+p.tam+'</td>'+
+      '<td style="padding:5px 8px;font-size:12px;font-weight:600;color:var(--orange)">R$ '+p.venda_cat.toFixed(2).replace('.',',')+'</td>'+
+      '<td style="padding:5px 8px;font-size:12px;color:var(--muted)">'+p.stk+'</td>'+
+      '<td style="padding:5px 8px;font-size:12px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.desc+'</td>'+
+    '</tr>';
+  });
+  html += '</tbody>';
+  table.innerHTML = html;
+  preview.style.display = 'block';
+}
+
+function confirmarImport(){
+  var total = importBuffer.length;
+  var salvos = 0;
+  setStatus('Importando '+total+' produtos...','#e4670a');
+
+  function salvarProximo(i){
+    if(i >= importBuffer.length){
+      setStatus('✓ '+salvos+' produto(s) importado(s)!','#3B6D11');
+      setTimeout(function(){setStatus('','');},3000);
+      cancelarImport();
+      renderCat();
+      return;
+    }
+    var p = importBuffer[i];
+    // Verifica se já existe (por nome ou sku)
+    var existe = prods.findIndex(function(x){
+      return x.nome === p.nome || (p.sku && x.sku === p.sku);
+    });
+    if(existe >= 0){
+      prods[existe] = Object.assign(prods[existe], p, {id: prods[existe].id});
+      p = prods[existe];
+    } else {
+      prods.push(p);
+    }
+    salvos++;
+
+    if(usandoAPI){
+      var dados = encodeURIComponent(JSON.stringify({
+        id: String(p.id), nome: p.nome, sku: p.sku||'', cat: p.cat||'',
+        tam: p.tam||'', venda: p.venda_cat||0, stk: p.stk||0, desc: p.desc||'', foto: ''
+      }));
+      fetch(API_URL+'?action=save&data='+dados)
+        .then(function(){ salvarProximo(i+1); })
+        .catch(function(){ salvarProximo(i+1); });
+    } else {
+      lsSave('sm_prods', prods);
+      setTimeout(function(){ salvarProximo(i+1); }, 10);
+    }
+  }
+
+  salvarProximo(0);
+}
+
+function cancelarImport(){
+  importBuffer = [];
+  document.getElementById('import-preview').style.display = 'none';
+  document.getElementById('import-table').innerHTML = '';
+  document.getElementById('import-msg').textContent = '';
 }
 
 loadAll();
