@@ -112,14 +112,14 @@ nav button.on{color:var(--orange);border-bottom-color:var(--orange)}
     </div>
     <div class="row2">
       <div class="fg"><label>Filamento (g)</label><input id="c-fil" type="number" value="100" min="0" oninput="calcular()"></div>
-      <div class="fg"><label>Custo filam. (R$/g)</label><input id="c-filg" type="number" value="0.35" min="0" step="0.01" oninput="calcular()"></div>
+      <div class="fg"><label>Custo filam. (R$/g)</label><input id="c-filg" type="number" value="0.10" min="0" step="0.01" oninput="calcular()"></div>
     </div>
     <div class="row2">
       <div class="fg"><label>Embalagem (R$)</label><input id="c-emb" type="number" value="1.75" min="0" step="0.05" oninput="calcular()"></div>
       <div class="fg"><label>Horas de impressão</label><input id="c-hrs" type="number" value="2" min="0" step="0.5" oninput="calcular()"></div>
     </div>
     <div class="row2">
-      <div class="fg"><label>Custo/hora máquina (R$)</label><input id="c-hora" type="number" value="2" min="0" step="0.5" oninput="calcular()"></div>
+      <div class="fg"><label>Custo/hora máquina (R$)</label><input id="c-hora" type="number" value="1" min="0" step="0.5" oninput="calcular()"></div>
       <div class="fg"><label style="color:var(--orange)">Custo máquina (calculado)</label><input id="r-maquina" readonly></div>
     </div>
   </div>
@@ -361,8 +361,7 @@ function loadAll(){
       .then(function(data){
         if(data.products){
           prods = data.products.map(function(p){
-            p.id = String(p.id||'');
-            p.venda_cat = parseFloat(p.venda)||0;
+            p.venda_cat = parseFloat(p.venda)||0; p.vShopee_cat = p.vShopee_cat ? parseFloat(p.vShopee_cat) : 0;
             p.foto = p.foto||null;
             return p;
           });
@@ -399,7 +398,8 @@ function syncProd(prod){
     tam:   String(prod.tam||''),
     venda: prod.venda_cat||prod.vShopee||0,
     stk:   prod.stk||0,
-    desc:  String(prod.desc||'')
+    desc:  String(prod.desc||''),
+    foto:  prod.foto||''
   }));
   fetch(API_URL+'?action=save&data='+dados)
     .then(function(r){ return r.json(); })
@@ -483,7 +483,7 @@ function calcular(){
 function salvarCalc(){
   var nome = v('c-nome').trim();
   if(!nome){ showMsg('calc-msg','Informe o nome do produto.'); return; }
-  var p = {id:Date.now().toString(), foto:null, venda_cat:calcData.vShopee};
+  var p = {id:Date.now().toString(), foto:null, venda_cat:calcData.venda, vShopee_cat:calcData.vShopee};
   var keys = Object.keys(calcData);
   for(var i=0;i<keys.length;i++) p[keys[i]] = calcData[keys[i]];
   p.nome = nome;
@@ -640,7 +640,7 @@ function renderCat(){
   for(var i=0;i<f.length;i++){
     var p=f[i];
     var qty=selqty[p.id]||0;
-    var priceVal=parseFloat(p.venda_cat||p.vShopee||p.venda||0);
+    var priceVal=parseFloat(p.venda_cat||p.venda||0);
     var imgHtml=p.foto?'<img src="'+p.foto+'" alt="">':'📦';
     html+='<div class="pcard'+(qty>0?' sel':'')+'">'+
       '<div class="pcard-img">'+imgHtml+'</div>'+
@@ -687,7 +687,7 @@ function addToOrc(){
     if(!qty)continue;
     var p=null;for(var j=0;j<prods.length;j++)if(prods[j].id===id){p=prods[j];break;}
     if(!p)continue;
-    var priceVal=parseFloat(p.venda_cat||p.vShopee||p.venda||0);
+    var priceVal=parseFloat(p.venda_cat||p.venda||0);
     var found=null;for(var k=0;k<orc.length;k++)if(orc[k].id===id){found=orc[k];break;}
     if(found)found.qty+=qty;
     else orc.push({id:p.id,nome:p.nome,preco:priceVal,foto:p.foto||null,qty:qty});
@@ -997,7 +997,7 @@ function renderVendas(){
 
   var filtradas=vendas.filter(function(v){
     var d=new Date(v.data+'T00:00:00');
-    return d.getMonth()===mesSelecionado && d.getFullYear()===new Date().getFullYear();
+    return d.getMonth()===mesSelecionado && d.getFullYear()===2026;
   });
 
   // Resumo
