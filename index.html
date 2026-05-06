@@ -1393,35 +1393,28 @@ function enviarAgente(){
   document.getElementById('agent-btn').disabled = true;
 
   var systemPrompt = `Você é um assistente de cadastro de produtos para uma loja de impressão 3D.
-Quando o usuário descrever um produto, extraia os dados e retorne SOMENTE um JSON válido, sem texto extra, sem blocos de código.
+Sua única função é EXTRAIR dados mencionados pelo usuário e retornar um JSON. NÃO faça cálculos — apenas copie os valores que o usuário informou.
 
-Configurações atuais da calculadora:
-- Taxa de luz: R$ ${ctxKwh}/kWh
-- Custo filamento: R$ ${ctxFilg}/g
-- Custo/hora máquina: R$ ${ctxHora}
-- Taxa Shopee: ${ctxShopee}%
-- Margem de lucro: ${ctxMargem}%
-
-Se o usuário informar dados de custo (filamento, horas, energia), calcule o custo total e o preço de venda usando a fórmula:
-custo = (kWh × ${ctxKwh}) + (gramas × ${ctxFilg}) + embalagem + (horas × ${ctxHora})
-venda_direta = custo × (1 + ${ctxMargem}/100)
-
-Retorne este JSON:
+Retorne SOMENTE este JSON válido, sem texto extra, sem blocos de código:
 {
-  "nome": "nome do produto",
-  "sku": "código se mencionado ou vazio",
-  "cat": "categoria se mencionada",
-  "tam": "tamanho se mencionado",
-  "venda": preço de venda como número,
-  "stk": estoque como número (0 se não mencionado),
-  "desc": "descrição breve",
-  "custo_calc": custo calculado como número,
-  "kwh": kWh usado,
-  "fil": gramas de filamento,
-  "emb": custo embalagem,
-  "hrs": horas de impressão,
-  "obs": "observação sobre o que foi assumido/calculado"
-}`;
+  "nome": "nome do produto (obrigatório)",
+  "sku": "código SKU se mencionado, senão vazio",
+  "cat": "categoria se mencionada, senão vazio",
+  "tam": "tamanho se mencionado, senão vazio",
+  "stk": estoque como número inteiro (0 se não mencionado),
+  "desc": "descrição breve do produto",
+  "fil": gramas de filamento como número (0 se não mencionado),
+  "kwh": consumo em kWh como número (0 se não mencionado),
+  "emb": custo da embalagem em reais como número (0 se não mencionado),
+  "hrs": horas de impressão como número (0 se não mencionado),
+  "venda_direta": preço de venda direto em reais como número apenas se o usuário informar um preço final explícito — senão 0,
+  "obs": "o que foi assumido ou está faltando"
+}
+
+Exemplos de extração correta:
+- "50g de filamento, 2 horas" → fil:50, hrs:2, kwh:0, emb:0, venda_direta:0
+- "chaveiro, 30g, 1h, embalagem 2 reais" → fil:30, hrs:1, emb:2, venda_direta:0
+- "camiseta, preço 45 reais" → fil:0, hrs:0, venda_direta:45`;
 
   var apiKey = (function(){ try{ return localStorage.getItem('sm_groqkey')||''; }catch(e){ return ''; } })();
   if(!apiKey){
@@ -1465,34 +1458,53 @@ Retorne este JSON:
       return;
     }
 
+    // Valores extraídos pela IA
+    var aFil  = parseFloat(parsed.fil)  || 0;
+    var aKwh  = parseFloat(parsed.kwh)  || 0;
+    var aEmb  = parseFloat(parsed.emb)  || 0;
+    var aHrs  = parseFloat(parsed.hrs)  || 0;
+    var txKwh    = parseFloat(ctxKwh);
+    var txFilg   = parseFloat(ctxFilg);
+    var txHora   = parseFloat(ctxHora);
+    var txShopee = parseFloat(ctxShopee);
+    var txMargem = parseFloat(ctxMargem);
+
+    // Cálculo idêntico ao da calculadora — JS, não IA
+    var aCusto  = (aKwh * txKwh) + (aFil * txFilg) + aEmb + (aHrs * txHora);
+    var aVenda  = aCusto > 0 ? aCusto * (1 + txMargem / 100) : (parseFloat(parsed.venda_direta) || 0);
+    var taxaP   = txShopee / 100;
+    var aShopee = taxaP < 1 ? aVenda / (1 - taxaP) : 0;
+    var aMReal  = aCusto > 0 ? (aVenda - aCusto) / aCusto * 100 : 0;
+
     agenteProduto = {
       id: Date.now().toString(),
       nome: parsed.nome||'',
       sku:  parsed.sku||'',
       cat:  parsed.cat||'',
       tam:  parsed.tam||'',
-      venda_cat: parseFloat(parsed.venda)||0,
+      venda_cat: aVenda,
       stk:  parseInt(parsed.stk)||0,
       desc: parsed.desc||'',
       foto: null,
-      // dados calculadora
-      custo: parsed.custo_calc||0,
-      kwh: parsed.kwh||0, taxa_kwh: parseFloat(ctxKwh),
-      fil: parsed.fil||0, filg: parseFloat(ctxFilg),
-      emb: parsed.emb||0, hrs: parsed.hrs||0, custoHora: parseFloat(ctxHora),
-      taxaShopee: parseFloat(ctxShopee), margem: parseFloat(ctxMargem), ajuste: 0,
-      vShopee: parsed.custo_calc ? parseFloat(parsed.venda)/(1-parseFloat(ctxShopee)/100) : 0,
-      margemReal: parsed.custo_calc ? ((parseFloat(parsed.venda) - parsed.custo_calc) / parsed.custo_calc * 100) : 0
+      custo: aCusto,
+      kwh: aKwh, taxa_kwh: txKwh,
+      fil: aFil, filg: txFilg,
+      emb: aEmb, hrs: aHrs, custoHora: txHora,
+      taxaShopee: txShopee, margem: txMargem, ajuste: 0,
+      vShopee: aShopee,
+      margemReal: aMReal
     };
 
     // Monta preview
     var fields = [
       ['Nome', agenteProduto.nome],
-      ['Preço venda direta', 'R$ '+agenteProduto.venda_cat.toFixed(2).replace('.',',')],
-      ['Custo calculado', agenteProduto.custo ? 'R$ '+agenteProduto.custo.toFixed(2).replace('.',',') : '—'],
+      ['Custo real (JS)', aCusto > 0 ? 'R$ '+aCusto.toFixed(2).replace('.',',') : '—'],
+      ['Preço venda direta', 'R$ '+aVenda.toFixed(2).replace('.',',')],
+      ['Preço Shopee ('+txShopee+'%)', aShopee > 0 ? 'R$ '+aShopee.toFixed(2).replace('.',',') : '—'],
+      ['Filamento', aFil > 0 ? aFil+'g × R$'+txFilg+' = R$'+(aFil*txFilg).toFixed(2) : '—'],
+      ['Impressão', aHrs > 0 ? aHrs+'h × R$'+txHora+' = R$'+(aHrs*txHora).toFixed(2) : '—'],
+      ['Embalagem', aEmb > 0 ? 'R$ '+aEmb.toFixed(2) : '—'],
       ['Categoria', agenteProduto.cat||'—'],
-      ['SKU', agenteProduto.sku||'—'],
-      ['Tamanho', agenteProduto.tam||'—'],
       ['Estoque', agenteProduto.stk],
       ['Descrição', agenteProduto.desc||'—'],
     ];
