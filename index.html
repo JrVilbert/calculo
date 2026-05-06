@@ -1594,71 +1594,114 @@ document.addEventListener('DOMContentLoaded', function(){
 
 // ── VOZ ───────────────────────────────────────────────────────
 var reconhecimento = null;
-var vozAtiva = false;
+var vozAtiva     = false;
+var usuarioParou = false;
+var transcriptFinal = '';
+var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
 function toggleVoz(){
-  if(vozAtiva){ pararVoz(); return; }
-
-  var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SpeechRec){
-    showMsg('agent-msg','Seu navegador não suporta voz. Use Chrome ou Edge.');
+  if(vozAtiva){
+    usuarioParou = true;
+    // stop() processa o áudio restante antes de disparar onend
+    if(reconhecimento){ try{ reconhecimento.stop(); }catch(e){ finalizarVoz(); } }
     return;
   }
 
+  var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRec){
+    showMsg('agent-msg','Voz não suportada. Use Chrome ou Edge.');
+    return;
+  }
+
+  vozAtiva       = true;
+  usuarioParou   = false;
+  transcriptFinal = '';
+  document.getElementById('agent-input').value = '';
+
+  var btn = document.getElementById('mic-btn');
+  btn.classList.add('gravando');
+  btn.textContent = '⏹';
+
+  document.getElementById('agent-thinking').style.display = 'block';
+  document.getElementById('agent-dots').textContent = '🎤 Ouvindo... fale o produto';
+
+  criarEIniciar();
+}
+
+function criarEIniciar(){
+  var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
   reconhecimento = new SpeechRec();
-  reconhecimento.lang = 'pt-BR';
-  reconhecimento.continuous = false;
+  reconhecimento.lang          = 'pt-BR';
+  reconhecimento.continuous    = !isIOS; // iOS não suporta continuous
   reconhecimento.interimResults = true;
 
-  reconhecimento.onstart = function(){
-    vozAtiva = true;
-    var btn = document.getElementById('mic-btn');
-    btn.classList.add('gravando');
-    btn.textContent = '⏹';
-    btn.title = 'Parar gravação';
-    document.getElementById('agent-thinking').style.display = 'block';
-    document.getElementById('agent-dots').textContent = '🎤 Ouvindo... fale o produto';
-  };
-
+  // Itera só os novos resultados (e.resultIndex), evita duplicar texto
   reconhecimento.onresult = function(e){
-    var transcript = '';
-    for(var i = 0; i < e.results.length; i++){
-      transcript += e.results[i][0].transcript;
+    var interim = '';
+    for(var i = e.resultIndex; i < e.results.length; i++){
+      var t = e.results[i][0].transcript;
+      if(e.results[i].isFinal) transcriptFinal += t + ' ';
+      else interim += t;
     }
-    document.getElementById('agent-input').value = transcript;
-  };
-
-  reconhecimento.onend = function(){
-    pararVoz();
-    var texto = (document.getElementById('agent-input').value||'').trim();
-    if(texto){
-      // Pequena pausa para o usuário ver o que foi transcrito antes de enviar
-      setTimeout(function(){ enviarAgente(); }, 800);
-    } else {
-      document.getElementById('agent-thinking').style.display = 'none';
-    }
+    document.getElementById('agent-input').value = (transcriptFinal + interim).trim();
+    var dots = document.getElementById('agent-dots');
+    if(dots) dots.textContent = interim ? '🎤 "' + interim.trim() + '"' : '🎤 Ouvindo...';
   };
 
   reconhecimento.onerror = function(e){
-    pararVoz();
-    var erros = {
-      'not-allowed': 'Permissão de microfone negada. Libere nas configurações do navegador.',
-      'no-speech':   'Nenhuma fala detectada. Tente novamente.',
-      'network':     'Erro de rede ao processar voz.'
+    // no-speech = pausa natural; aborted = stop() manual esperado
+    if(e.error === 'no-speech' || e.error === 'aborted') return;
+    // Erro real: para tudo e avisa
+    usuarioParou = true;
+    finalizarVoz();
+    var msgs = {
+      'not-allowed':        'Permissão de microfone negada. Libere nas configurações.',
+      'network':            'Erro de rede ao processar voz.',
+      'service-not-allowed':'Serviço de voz bloqueado neste contexto (use HTTPS).'
     };
-    showMsg('agent-msg', erros[e.error] || 'Erro no microfone: '+e.error);
+    showMsg('agent-msg', msgs[e.error] || 'Erro de voz: ' + e.error);
     document.getElementById('agent-thinking').style.display = 'none';
   };
 
-  reconhecimento.start();
+  reconhecimento.onend = function(){
+    if(!vozAtiva) return; // já finalizado externamente
+    if(usuarioParou){ finalizarVoz(); return; }
+    // Parada automática (silêncio, iOS, rede) — reinicia silenciosamente
+    try{ criarEIniciar(); }catch(e){ finalizarVoz(); }
+  };
+
+  try{ reconhecimento.start(); }
+  catch(e){
+    vozAtiva = false;
+    showMsg('agent-msg','Não foi possível iniciar o microfone.');
+    document.getElementById('agent-thinking').style.display = 'none';
+  }
 }
 
-function pararVoz(){
+function finalizarVoz(){
   vozAtiva = false;
   var btn = document.getElementById('mic-btn');
-  if(btn){ btn.classList.remove('gravando'); btn.textContent = '🎤'; btn.title = 'Falar'; }
-  if(reconhecimento){ try{ reconhecimento.stop(); }catch(e){} reconhecimento = null; }
+  if(btn){ btn.classList.remove('gravando'); btn.textContent = '🎤'; }
+  if(reconhecimento){ try{ reconhecimento.abort(); }catch(e){} reconhecimento = null; }
+
+  var texto = (document.getElementById('agent-input').value||'').trim();
+  if(texto){
+    var dots = document.getElementById('agent-dots');
+    if(dots) dots.textContent = '⏳ Interpretando sua mensagem...';
+    setTimeout(function(){ enviarAgente(); }, 400);
+  } else {
+    document.getElementById('agent-thinking').style.display = 'none';
+    showMsg('agent-msg','Nenhuma fala detectada. Tente novamente.');
+  }
 }
+
+// Para gravação ao sair/minimizar a aba
+document.addEventListener('visibilitychange', function(){
+  if(document.hidden && vozAtiva){
+    usuarioParou = true;
+    if(reconhecimento){ try{ reconhecimento.stop(); }catch(e){ finalizarVoz(); } }
+  }
+});
 
 
 var importBuffer = [];
