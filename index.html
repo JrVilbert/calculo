@@ -375,6 +375,19 @@ nav button.on{color:var(--orange);border-bottom-color:var(--orange)}
     <div class="fg"><label>Observações do orçamento</label><textarea id="cfg-obs" rows="3" placeholder="Ex: Prazo de entrega: 5 dias úteis. Aceitamos Pix e cartão." oninput="saveCfg()" style="resize:vertical"></textarea></div>
     <div class="fg"><label>Validade do orçamento (dias)</label><input type="number" id="cfg-validade" value="5" min="1" oninput="saveCfg()"></div>
   </div>
+  <div class="card" style="border:1.5px solid var(--orange)">
+    <div class="ctitle">Agente IA — Chave da API Anthropic</div>
+    <div class="fg">
+      <label>Chave da API (sk-ant-...)</label>
+      <div style="position:relative">
+        <input type="password" id="cfg-apikey" placeholder="sk-ant-api03-..." style="padding-right:44px">
+        <button onclick="toggleApiKey()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--muted);font-size:14px" id="apikey-eye">👁</button>
+      </div>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:10px">Obtenha sua chave em <strong>console.anthropic.com</strong>. Ela fica salva apenas neste dispositivo.</p>
+    <button class="btn btn-pri" onclick="saveApiKey()">Salvar chave da API</button>
+    <div class="msg" id="apikey-msg"></div>
+  </div>
   <button class="btn btn-pri" onclick="showMsg('cfg-msg','✓ Configurações salvas!',2000)">Salvar configurações</button>
   <div class="msg" id="cfg-msg"></div>
 </div>
@@ -407,6 +420,7 @@ function loadAll(){
   try{ var ve=lsGet('sm_vendas'); if(ve) vendas=JSON.parse(ve); }catch(e){ vendas=[]; }
   try{ var c=lsGet('sm_cfg'); if(c){ cfg=JSON.parse(c); applyCfg(); } }catch(e){ cfg={}; }
   try{ logoB64=lsGet('sm_logo')||''; if(logoB64){ document.getElementById('logo-prev').src=logoB64; document.getElementById('logo-prev').style.display='block'; document.getElementById('logo-lbl').textContent='Logo carregado ✓'; } }catch(e){}
+  try{ var ak=localStorage.getItem('sm_apikey'); if(ak){ var akEl=document.getElementById('cfg-apikey'); if(akEl) akEl.value=ak; } }catch(e){}
   // Set today's date on venda form
   document.getElementById('v-data').value = new Date().toISOString().split('T')[0];
   renderMesBtns();
@@ -948,6 +962,20 @@ function delProd(id){
 }
 
 // ── CONFIGURAÇÕES ─────────────────────────────────────────────
+function saveApiKey(){
+  var key = (document.getElementById('cfg-apikey').value||'').trim();
+  if(!key){ showMsg('apikey-msg','Informe a chave antes de salvar.'); return; }
+  try{ localStorage.setItem('sm_apikey', key); }catch(e){}
+  showMsg('apikey-msg','✓ Chave salva com sucesso!');
+}
+
+function toggleApiKey(){
+  var inp = document.getElementById('cfg-apikey');
+  var eye = document.getElementById('apikey-eye');
+  if(inp.type === 'password'){ inp.type = 'text'; eye.textContent = '🙈'; }
+  else { inp.type = 'password'; eye.textContent = '👁'; }
+}
+
 function saveCfg(){
   cfg={
     nome:v('cfg-nome'), cnpj:v('cfg-cnpj'), end:v('cfg-end'),
@@ -1395,11 +1423,24 @@ Retorne este JSON:
   "obs": "observação sobre o que foi assumido/calculado"
 }`;
 
+  var apiKey = (function(){ try{ return localStorage.getItem('sm_apikey')||''; }catch(e){ return ''; } })();
+  if(!apiKey){
+    document.getElementById('agent-thinking').style.display = 'none';
+    document.getElementById('agent-btn').disabled = false;
+    showMsg('agent-msg','⚠ Configure sua chave da API Anthropic na aba ⚙ Config.');
+    return;
+  }
+
   fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1000,
       system: systemPrompt,
       messages: [{ role: 'user', content: msg }]
