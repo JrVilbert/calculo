@@ -1901,47 +1901,91 @@ function processarCSV(txt){
 
   if(!importBuffer.length){ showMsg('import-msg','Nenhum produto válido encontrado.'); return; }
 
-  // Mostra preview
-  var preview = document.getElementById('import-preview');
-  var info = document.getElementById('import-info');
-  var table = document.getElementById('import-table');
-  info.textContent = importBuffer.length + ' produto(s) encontrado(s) para importar';
+  // Mostra preview com checkboxes
+  var total = importBuffer.length;
+  document.getElementById('import-info').innerHTML =
+    '<span id="imp-sel-txt">'+total+'</span> de '+total+' produto(s) selecionado(s)';
 
   var html = '<thead><tr style="background:var(--orange);color:#fff">';
-  ['Nome','SKU','Categoria','Tamanho','Preço','Estoque','Descrição'].forEach(function(h){
+  html += '<th style="padding:6px 10px"><input type="checkbox" id="imp-all" checked onchange="toggleSelectAllImport(this)" style="width:15px;height:15px;cursor:pointer" title="Marcar/desmarcar todos"></th>';
+  ['Nome','Preço','SKU','Categoria','Horas','Custo'].forEach(function(h){
     html += '<th style="padding:6px 8px;text-align:left;white-space:nowrap;font-size:11px">'+h+'</th>';
   });
   html += '</tr></thead><tbody>';
   importBuffer.forEach(function(p, i){
-    html += '<tr style="'+(i%2===0?'background:var(--bg2,#f5f5f5)':'')+'">'+
-      '<td style="padding:5px 8px;font-size:12px">'+p.nome+'</td>'+
+    var bg = i%2===0 ? 'background:var(--bg2,#f5f5f5)' : '';
+    html += '<tr id="imp-row-'+i+'" style="'+bg+';transition:opacity .15s">'+
+      '<td style="padding:5px 10px"><input type="checkbox" id="imp-chk-'+i+'" checked onchange="atualizarContadorImport()" style="width:15px;height:15px;cursor:pointer"></td>'+
+      '<td style="padding:5px 8px;font-size:12px;font-weight:500">'+p.nome+'</td>'+
+      '<td style="padding:5px 8px;font-size:12px;font-weight:600;color:var(--orange)">R$ '+p.venda_cat.toFixed(2).replace('.',',')+'</td>'+
       '<td style="padding:5px 8px;font-size:12px;color:var(--muted)">'+p.sku+'</td>'+
       '<td style="padding:5px 8px;font-size:12px;color:var(--muted)">'+p.cat+'</td>'+
-      '<td style="padding:5px 8px;font-size:12px;color:var(--muted)">'+p.tam+'</td>'+
-      '<td style="padding:5px 8px;font-size:12px;font-weight:600;color:var(--orange)">R$ '+p.venda_cat.toFixed(2).replace('.',',')+'</td>'+
-      '<td style="padding:5px 8px;font-size:12px;color:var(--muted)">'+p.stk+'</td>'+
-      '<td style="padding:5px 8px;font-size:12px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.desc+'</td>'+
+      '<td style="padding:5px 8px;font-size:12px;color:var(--muted)">'+p.hrs+'h</td>'+
+      '<td style="padding:5px 8px;font-size:12px;color:var(--muted)">'+( p.custo ? 'R$ '+p.custo.toFixed(2).replace('.',',') : '—')+'</td>'+
     '</tr>';
   });
   html += '</tbody>';
-  table.innerHTML = html;
-  preview.style.display = 'block';
+  document.getElementById('import-table').innerHTML = html;
+  document.getElementById('import-preview').style.display = 'block';
+}
+
+function toggleSelectAllImport(cb){
+  var total = importBuffer.length;
+  for(var i = 0; i < total; i++){
+    var chk = document.getElementById('imp-chk-'+i);
+    var row = document.getElementById('imp-row-'+i);
+    if(chk){ chk.checked = cb.checked; }
+    if(row){ row.style.opacity = cb.checked ? '1' : '0.35'; }
+  }
+  atualizarContadorImport();
+}
+
+function atualizarContadorImport(){
+  var total = importBuffer.length, sel = 0;
+  for(var i = 0; i < total; i++){
+    var chk = document.getElementById('imp-chk-'+i);
+    var row = document.getElementById('imp-row-'+i);
+    if(chk && chk.checked){ sel++; if(row) row.style.opacity = '1'; }
+    else { if(row) row.style.opacity = '0.35'; }
+  }
+  var txt = document.getElementById('imp-sel-txt');
+  if(txt) txt.textContent = sel;
+  // Sincroniza o "marcar todos"
+  var all = document.getElementById('imp-all');
+  if(all){ all.checked = sel === total; all.indeterminate = sel > 0 && sel < total; }
 }
 
 function confirmarImport(){
-  var total = importBuffer.length;
+  // Filtra apenas os selecionados
+  var selecionados = importBuffer.filter(function(_, i){
+    var chk = document.getElementById('imp-chk-'+i);
+    return chk && chk.checked;
+  });
+  if(!selecionados.length){ showMsg('import-msg','Nenhum produto selecionado.'); return; }
+
+  var total = selecionados.length;
   var salvos = 0;
-  setStatus('Importando '+total+' produtos...','#e4670a');
+  setStatus('Importando '+total+' produto(s)...','#e4670a');
 
   function salvarProximo(i){
-    if(i >= importBuffer.length){
+    if(i >= selecionados.length){
       setStatus('✓ '+salvos+' produto(s) importado(s)!','#3B6D11');
       setTimeout(function(){setStatus('','');},3000);
       cancelarImport();
       renderCat();
+      updateVendaSelect();
       return;
     }
-    var p = importBuffer[i];
+    var p = selecionados[i];
+    // Preenche campos de custo ausentes com defaults da calculadora
+    // para que a edição pela aba Calculadora funcione corretamente
+    if(!p.custoHora) p.custoHora = parseFloat(document.getElementById('c-hora').value) || 1;
+    if(!p.taxaShopee) p.taxaShopee = parseFloat(document.getElementById('c-shopee').value) || 20;
+    if(!p.margem)    p.margem    = parseFloat(document.getElementById('c-margem').value) || 150;
+    if(!p.ajuste)    p.ajuste    = 0;
+    if(!p.taxa_kwh)  p.taxa_kwh  = parseFloat(document.getElementById('c-taxa').value) || 0.185;
+    if(!p.filg)      p.filg      = parseFloat(document.getElementById('c-filg').value) || 0.10;
+
     // Verifica se já existe (por nome ou sku)
     var existe = prods.findIndex(function(x){
       return x.nome === p.nome || (p.sku && x.sku === p.sku);
