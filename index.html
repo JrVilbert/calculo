@@ -222,10 +222,12 @@ nav button.on{color:var(--orange);border-bottom-color:var(--orange)}
         <div id="agent-fields" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px"></div>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-style:italic" id="agent-obs"></div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-pri" style="flex:2" onclick="confirmarAgente()">✓ Confirmar e salvar</button>
-        <button class="btn btn-out" style="flex:1" onclick="editarAgente()">✏ Editar</button>
-        <button class="btn btn-out btn-danger" style="flex:1" onclick="cancelarAgente()">✕</button>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-pri" onclick="confirmarAgente()">✓ Confirmar e salvar</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-out btn-green" style="flex:1" onclick="editarAgente()">📷 Adicionar foto</button>
+          <button class="btn btn-out btn-danger" style="flex:1" onclick="cancelarAgente()">✕ Cancelar</button>
+        </div>
       </div>
     </div>
     <div id="agent-history" style="margin-top:8px;max-height:120px;overflow-y:auto"></div>
@@ -235,7 +237,21 @@ nav button.on{color:var(--orange);border-bottom-color:var(--orange)}
   <!-- IMPORTAÇÃO EM MASSA -->
   <div class="card" style="margin-bottom:12px">
     <div class="ctitle">Importar vários produtos de uma vez</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Importe um arquivo CSV ou Excel com vários produtos. Baixe o modelo para preencher corretamente.</p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Cole o link do Google Sheets ou importe um arquivo CSV/Excel.</p>
+
+    <!-- Google Sheets -->
+    <div style="background:var(--bg);border-radius:var(--radius-sm);padding:10px;margin-bottom:10px">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">📊 Google Sheets</div>
+      <div style="display:flex;gap:6px;margin-bottom:6px">
+        <input id="gs-url" type="url" placeholder="Cole o link da planilha aqui..." style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--card);color:var(--text)">
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
+        <input id="gs-sheet" type="text" placeholder='Nome da aba (ex: produtos)' style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--card);color:var(--text)">
+        <button class="btn-sm" onclick="importarGoogleSheets()" style="background:var(--orange);color:#fff;border-color:var(--orange);white-space:nowrap">Buscar →</button>
+      </div>
+      <p style="font-size:11px;color:var(--muted)">A planilha precisa estar pública: <strong>Compartilhar → Qualquer pessoa com o link → Leitor</strong></p>
+    </div>
+
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
       <button class="btn-sm" onclick="baixarModelo()" style="background:var(--green-bg);color:var(--green);border-color:#86efac">⬇ Baixar modelo CSV</button>
       <button class="btn-sm" onclick="document.getElementById('import-inp').click()" style="background:var(--blue-bg,#eff6ff);color:#2563eb;border-color:#93c5fd">📂 Importar CSV / Excel</button>
@@ -398,6 +414,7 @@ nav button.on{color:var(--orange);border-bottom-color:var(--orange)}
 
 <script>
 var prods=[], orc=[], selqty={}, editing=null, imgb64=null, calcData={};
+var pendingAgentData = null;
 var vendas=[], cfg={}, logoB64='';
 var mesSelecionado = new Date().getMonth(); // 0=Jan
 var MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -909,8 +926,18 @@ function saveProd(){
     desc:(document.getElementById('pdesc').value||'').trim(),
     foto:imgb64||oldFoto||null
   };
-  if(editing){for(var i=0;i<prods.length;i++)if(prods[i].id===editing){prods[i]=prod;break;}editing=null;}
-  else prods.push(prod);
+  // Mescla dados de custo vindos do agente IA (se houver)
+  if(pendingAgentData){
+    var pkeys=Object.keys(pendingAgentData);
+    for(var k=0;k<pkeys.length;k++) prod[pkeys[k]]=pendingAgentData[pkeys[k]];
+    pendingAgentData=null;
+  }
+  if(editing){
+    var found=false;
+    for(var i=0;i<prods.length;i++) if(prods[i].id===editing){prods[i]=prod;found=true;break;}
+    if(!found) prods.push(prod);
+    editing=null;
+  } else { prods.push(prod); }
   syncProd(prod);clearForm();showMsg('pmsg','✓ Produto salvo!');
 }
 
@@ -919,7 +946,7 @@ function clearForm(){
   document.getElementById('upprev').style.display='none';
   document.getElementById('uplbl').textContent='Clique para adicionar foto';
   document.getElementById('upi').value='';
-  imgb64=null;editing=null;
+  imgb64=null;editing=null;pendingAgentData=null;
 }
 
 function editProd(id){
@@ -1561,7 +1588,16 @@ function confirmarAgente(){
 function editarAgente(){
   if(!agenteProduto){ return; }
   var p = agenteProduto;
-  // Preenche o formulário manual com os dados interpretados
+
+  // Guarda os dados de custo para serem mesclados no saveProd()
+  pendingAgentData = {
+    custo:p.custo, kwh:p.kwh, taxa_kwh:p.taxa_kwh,
+    fil:p.fil, filg:p.filg, emb:p.emb, hrs:p.hrs, custoHora:p.custoHora,
+    taxaShopee:p.taxaShopee, margem:p.margem, ajuste:p.ajuste,
+    vShopee:p.vShopee, margemReal:p.margemReal
+  };
+  editing = p.id;
+
   document.getElementById('pnome').value  = p.nome||'';
   document.getElementById('psku').value   = p.sku||'';
   document.getElementById('pcat').value   = p.cat||'';
@@ -1571,9 +1607,21 @@ function editarAgente(){
   document.getElementById('pdesc').value  = p.desc||'';
   document.getElementById('agent-preview').style.display = 'none';
   agenteProduto = null;
-  // Scroll para o formulário
-  document.getElementById('pnome').scrollIntoView({behavior:'smooth'});
-  document.getElementById('pnome').focus();
+
+  // Vai para a aba de cadastro e destaca a área de foto
+  go('add', document.querySelectorAll('nav button')[3]);
+  setTimeout(function(){
+    var upa = document.getElementById('upa');
+    if(!upa) return;
+    upa.scrollIntoView({behavior:'smooth', block:'center'});
+    upa.style.borderColor = 'var(--orange)';
+    upa.style.background  = 'var(--orange-light)';
+    document.getElementById('uplbl').textContent = '📷 Toque aqui para adicionar a foto do produto';
+    setTimeout(function(){
+      upa.style.borderColor = '';
+      upa.style.background  = '';
+    }, 3000);
+  }, 120);
 }
 
 function cancelarAgente(){
@@ -1706,6 +1754,32 @@ document.addEventListener('visibilitychange', function(){
 
 var importBuffer = [];
 
+function importarGoogleSheets(){
+  var url   = (document.getElementById('gs-url').value||'').trim();
+  var sheet = (document.getElementById('gs-sheet').value||'').trim();
+  if(!url){ showMsg('import-msg','Cole a URL da planilha.'); return; }
+
+  var match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if(!match){ showMsg('import-msg','URL inválida. Use o link de compartilhamento do Google Sheets.'); return; }
+
+  var id = match[1];
+  var csvUrl = 'https://docs.google.com/spreadsheets/d/'+id+'/gviz/tq?tqx=out:csv'+(sheet?'&sheet='+encodeURIComponent(sheet):'');
+
+  document.getElementById('import-msg').textContent = '⏳ Buscando planilha...';
+  fetch(csvUrl)
+    .then(function(r){
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return r.text();
+    })
+    .then(function(txt){
+      document.getElementById('import-msg').textContent = '';
+      processarCSV(txt);
+    })
+    .catch(function(){
+      showMsg('import-msg','Erro ao buscar. Verifique se a planilha está pública: Compartilhar → Qualquer pessoa com o link → Leitor.');
+    });
+}
+
 function baixarModelo(){
   var csv = 'nome,sku,cat,tam,venda,stk,desc\n';
   csv += 'Camiseta Preta P,CAM-001,Roupas,P,49.90,10,100% algodão\n';
@@ -1757,38 +1831,71 @@ function lerExcel(file){
   reader.readAsArrayBuffer(file);
 }
 
+function normalizarNum(v){ return parseFloat((v||'0').toString().replace(',','.')) || 0; }
+
 function processarCSV(txt){
   var linhas = txt.trim().split(/\r?\n/);
   if(linhas.length < 2){ showMsg('import-msg','Arquivo vazio ou sem dados.'); return; }
 
-  var headers = linhas[0].split(',').map(function(h){ return h.trim().toLowerCase().replace(/["""]/g,''); });
-  var campos = ['nome','sku','cat','tam','venda','stk','desc'];
+  // Aliases: mapeia nomes de colunas de diferentes fontes para nosso padrão
+  var ALIASES = {
+    'produto':'nome','product':'nome','name':'nome',
+    'venda varejo':'venda','venda direta':'venda','preco':'venda','preço':'venda','price':'venda','valor':'venda',
+    'venda shopee':'vshopee',
+    'estoque':'stk','stock':'stk',
+    'categoria':'cat','category':'cat',
+    'tamanho':'tam','size':'tam',
+    'descricao':'desc','descrição':'desc','description':'desc',
+    'embalagem':'emb','filamento':'fil','gramas':'filg','horas':'hrs',
+  };
 
-  // Valida se tem coluna nome e venda
-  if(headers.indexOf('nome') < 0 || headers.indexOf('venda') < 0){
-    showMsg('import-msg','O arquivo precisa ter colunas: nome e venda. Baixe o modelo para ver o formato correto.');
-    return;
-  }
+  // Resolve duplicatas: duas colunas "luz" → luz_kwh e luz_taxa
+  var rawHeaders = linhas[0].split(',').map(function(h){ return h.trim().toLowerCase().replace(/["""]/g,''); });
+  var luzCount = 0;
+  var headers = rawHeaders.map(function(h){
+    if(h === 'luz'){ luzCount++; return luzCount === 1 ? 'kwh' : 'taxa_kwh'; }
+    return ALIASES[h] || h;
+  });
+
+  var hasNome  = headers.indexOf('nome')  >= 0;
+  var hasVenda = headers.indexOf('venda') >= 0;
+  if(!hasNome){  showMsg('import-msg','Coluna de nome não encontrada (esperado: nome ou produto).'); return; }
+  if(!hasVenda){ showMsg('import-msg','Coluna de preço não encontrada (esperado: venda, preço ou "venda varejo").'); return; }
 
   importBuffer = [];
   for(var i = 1; i < linhas.length; i++){
     if(!linhas[i].trim()) continue;
-    var cols = linhas[i].split(',');
+    // Suporta campos com vírgula entre aspas
+    var cols = linhas[i].match(/(".*?"|[^,]+)(?=,|$)/g) || linhas[i].split(',');
     var obj = {};
     headers.forEach(function(h, idx){
       obj[h] = (cols[idx]||'').trim().replace(/^[""]|[""]$/g,'');
     });
     if(!obj.nome) continue;
+
+    var kwh     = normalizarNum(obj.kwh);
+    var taxa_kwh= normalizarNum(obj.taxa_kwh) || normalizarNum(obj.taxa_kwh);
+    var fil     = normalizarNum(obj.fil);
+    var filg    = normalizarNum(obj.filg);
+    var emb     = normalizarNum(obj.emb);
+    var hrs     = normalizarNum(obj.hrs);
+    var custo   = normalizarNum(obj.custo);
+    var vshopee = normalizarNum(obj.vshopee);
+
     importBuffer.push({
       id: Date.now().toString() + i,
       nome: obj.nome||'',
       sku:  obj.sku||'',
-      cat:  obj.cat||obj.categoria||'',
-      tam:  obj.tam||obj.tamanho||'',
-      venda_cat: parseFloat((obj.venda||'0').replace(',','.')) || 0,
-      stk:  parseInt(obj.stk||obj.estoque||'0') || 0,
-      desc: obj.desc||obj.descricao||obj['descrição']||'',
-      foto: null
+      cat:  obj.cat||'',
+      tam:  obj.tam||'',
+      venda_cat:  normalizarNum(obj.venda),
+      vShopee_cat: vshopee,
+      stk:  parseInt(obj.stk||'0') || 0,
+      desc: obj.desc||'',
+      foto: null,
+      // campos de custo (preservados para edição futura na calculadora)
+      custo:custo, kwh:kwh, taxa_kwh:taxa_kwh,
+      fil:fil, filg:filg, emb:emb, hrs:hrs
     });
   }
 
